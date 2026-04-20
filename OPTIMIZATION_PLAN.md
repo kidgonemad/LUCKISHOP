@@ -340,7 +340,7 @@ Flip a query param, don't redeploy.
 3. Stop, compare visually + measure file size ✓ done
 4. If good → gltfpack on vinyl GLB ✓ done
 5. **Phase 2** — lazy load + memory drop ✓ done
-6. **Phase 3** — self-host Three.js + fonts
+6. **Phase 3a+3b** — self-host Three.js + fonts ✓ done (3c version upgrade deferred)
 7. Re-measure baseline. If targets met for desktop and high-end mobile, ship.
 8. **Phase 5** — cheap rendering (defer 4 — it's the hardest)
 9. **Section 18** — Mobile UX polish + interaction parity (depends on Phase 5 frame budget)

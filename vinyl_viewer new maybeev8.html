@@ -586,7 +586,7 @@ const cardScenes = [];
 
 // ── THREE.JS CARD SCENE ──────────────────────────────────────────────────
 function makeCardScene(canvas, type) {
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:false, alpha:true});
   renderer.setPixelRatio(1);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.NoToneMapping;
@@ -1184,7 +1184,7 @@ function openModal(idx){
   if(modalSC){modalSC.scene.traverse(n=>{if(n.isMesh){n.geometry.dispose();const m=Array.isArray(n.material)?n.material:[n.material];m.forEach(mt=>{if(mt.map)mt.map.dispose();mt.dispose();});}});modalSC.scene.clear();}
   if(!modalRenderer){
     modalRenderer=new THREE.WebGLRenderer({canvas:modalCanvas,antialias:true,alpha:true});
-    modalRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    modalRenderer.setPixelRatio(Math.min(devicePixelRatio, window.innerWidth <= 768 ? 1 : 1.5));
     modalRenderer.outputEncoding=THREE.sRGBEncoding;
     modalRenderer.toneMapping=THREE.NoToneMapping;
     modalRenderer.physicallyCorrectLights=true;
@@ -1301,8 +1301,13 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.cu
 
 // ── RENDER LOOP ────────────────────────────────────────────────────────────
 const clock=new THREE.Clock();
+// Throttle to ~30fps on weak devices (≤4 logical cores). Animations still run at correct wall-clock pace
+// because clock.getDelta() accumulates time across skipped frames.
+const _THROTTLE = (navigator.hardwareConcurrency||8) <= 4;
+let _frameSkip = 0;
 function animate(){
   requestAnimationFrame(animate);
+  if(_THROTTLE && (_frameSkip++ & 1)) return;
   const delta=clock.getDelta();
 
   cardScenes.forEach((sc,i)=>{
