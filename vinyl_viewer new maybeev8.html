@@ -216,9 +216,17 @@ main{position:relative;width:100%;margin-top:-45px}
 
 /* ── PRODUCT PAGE (MODAL) ── */
 #modal{position:fixed;inset:0;z-index:500;background:#fff;
-  display:none;overflow-y:auto;overflow-x:hidden;opacity:0;transition:opacity .3s}
+  display:none;overflow-y:auto;overflow-x:hidden;opacity:0;transition:opacity .3s;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #modal.open{display:block;opacity:1}
 #modal::-webkit-scrollbar{width:0;display:none}
+.modal-close{position:fixed;top:12px;right:16px;z-index:501;
+  width:40px;height:40px;border:none;background:rgba(255,255,255,.9);
+  color:#000;font-size:24px;line-height:1;cursor:pointer;border-radius:50%;
+  font-family:'Dot Matrix V2',monospace;display:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .15s ease}
+#modal.open .modal-close{display:flex;align-items:center;justify-content:center}
+.modal-close:active{transform:scale(.9)}
 .modal-inner{position:relative;width:100%;max-width:1200px;margin:0 auto;
   padding:40px;box-sizing:border-box;padding-top:20px;
   display:flex;flex-wrap:wrap;gap:0}
@@ -317,15 +325,30 @@ main{position:relative;width:100%;margin-top:-45px}
 /* ── MOBILE ── */
 @media only screen and (max-width:768px){
   main{margin-top:-80px}
-  #items{width:calc(100% - 40px);padding-bottom:40px;padding-top:40px;gap:15px}
-  #items a{width:100%}
+  #items{width:calc(100% - 40px)!important;padding-bottom:40px;padding-top:40px;gap:15px}
+  #items a{width:100%!important}
+  /* Match live theme mobile typography + allow long titles to wrap */
+  #items a .item-title{font-size:12px!important;white-space:normal!important;max-width:90%;text-align:center;line-height:1.4}
+  #items a .item-price{font-size:11px!important}
   .footer-links a{font-size:32px;display:block;margin:10px auto;text-align:center;width:100%;white-space:nowrap}
+  /* Ensure modal stacks canvas-above-text on mobile (belt-and-suspenders) */
+  .modal-inner{flex-direction:column!important}
+  .modal-left,.modal-right{width:100%!important;padding-right:0!important}
 }
 @media only screen and (max-width:600px){
   #cart{right:32px !important;top:50px !important}
 }
 @media only screen and (min-width:600px){
   #cart{right:75px;top:45px;height:30px;width:30px}
+}
+
+/* Reduced motion: skip the bouncy layout transitions and vinyl open animation */
+@media (prefers-reduced-motion: reduce){
+  .modal-inner,.modal-left,.modal-right,.modal-title,.modal-price,.modal-add-btn,
+  .modal-details,.modal-canvas-wrap,#modalCanvas,.modal-features li,
+  .modal-preorder,.modal-support{
+    transition:none !important;animation:none !important}
+  .scroll-text{animation:none !important}
 }
 </style>
 </head>
@@ -407,6 +430,7 @@ main{position:relative;width:100%;margin-top:-45px}
 
 <!-- PRODUCT PAGE (MODAL) -->
 <div id="modal">
+  <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
   <div class="modal-inner">
     <div class="modal-left">
       <div class="modal-canvas-wrap">
