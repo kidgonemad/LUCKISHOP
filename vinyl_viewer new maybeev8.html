@@ -779,6 +779,34 @@ function loadCached(url,cb){
   _sharedLoader.load(url,tex=>{_texCache[url]=tex;cb(tex.clone());},undefined,()=>console.warn('Texture not found:',url));
 }
 
+// Progressive loader: try the small `_lo.webp` preview first (fast), then upgrade to
+// the full-res version when it arrives. Callback fires with each successful load so
+// the material can be swapped twice. Lo callback is suppressed if full arrives first.
+function loadCachedProgressive(url, cb){
+  const loUrl = url.replace(/\.webp$/i, '_lo.webp');
+  let fullLoaded = false;
+  // Kick off full-res
+  if(_texCache[url]){
+    fullLoaded = true;
+    cb(_texCache[url].clone(), 'full');
+  } else {
+    _sharedLoader.load(url, tex => {
+      _texCache[url] = tex;
+      fullLoaded = true;
+      cb(tex.clone(), 'full');
+    }, undefined, () => console.warn('Texture not found:', url));
+  }
+  // Kick off preview (applies only if full hasn't landed yet)
+  if(_texCache[loUrl]){
+    if(!fullLoaded) cb(_texCache[loUrl].clone(), 'lo');
+  } else {
+    _sharedLoader.load(loUrl, tex => {
+      _texCache[loUrl] = tex;
+      if(!fullLoaded) cb(tex.clone(), 'lo');
+    }, undefined, () => {/* lo missing is fine — full will still arrive */});
+  }
+}
+
 // Preload every variant texture up front so the cache is warm by the time
 // GLBs finish parsing. Eliminates the default→variant texture flash.
 (function preloadVariantTextures(){
@@ -807,14 +835,17 @@ function applyVariantTextures(sceneRoot, productIdx){
       const origFlipY = mat.map.flipY;
       const origWrapS = mat.map.wrapS;
       const origWrapT = mat.map.wrapT;
-      loadCached(texMap[key], tex=>{
+      loadCachedProgressive(texMap[key], (tex /* quality: 'lo' first, 'full' upgrade */) => {
         tex.encoding = THREE.sRGBEncoding;
         tex.flipY = origFlipY;
         tex.wrapS = origWrapS;
         tex.wrapT = origWrapT;
         tex.needsUpdate = true;
+        const prev = mat.map;
         mat.map = tex;
         mat.needsUpdate = true;
+        // Free the old (lo) clone's GPU upload when the full-res swap arrives
+        if(prev && prev !== tex && typeof prev.dispose === 'function') prev.dispose();
         if(sc) sc.dirty=true;
       });
     });
