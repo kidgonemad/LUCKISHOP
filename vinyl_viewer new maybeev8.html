@@ -665,6 +665,10 @@ function fixMaterials(gltfScene, type){
     const mats=Array.isArray(n.material)?n.material:[n.material];
     mats.forEach(mat=>{
       if(type==='vinyl'&&VINYL_BACK.has(n.name)){mat.side=THREE.BackSide;mat.transparent=false;mat.opacity=1;mat.depthWrite=true;}
+      // CD cover planes: force FrontSide + opaque so front/back don't overlay when viewed from the opposite side.
+      if(type==='cd'&&(mat.name==='FOR FRONT SIDE'||mat.name==='FOR BACK'||mat.name==='FOR BACK.001'||mat.name==='DRB COVERR')){
+        mat.side=THREE.FrontSide;mat.transparent=false;mat.opacity=1;mat.depthWrite=true;
+      }
       if(mat.name==='Material.070'||mat.name==='Frosted transparent glass'||mat.name==='Glass.005'){mat.transparent=true;mat.opacity=0.25;mat.depthWrite=false;}
       if(mat.roughnessMap)mat.roughnessMap.encoding=THREE.LinearEncoding;
       if(mat.normalMap){mat.normalMap.encoding=THREE.LinearEncoding;mat.normalScale.set(1,-1);}
