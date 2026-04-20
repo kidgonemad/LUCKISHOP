@@ -405,6 +405,18 @@ body.product-mode .modal-vinyl-btn{position:fixed;bottom:12px;left:50%;transform
 </style>
 </head>
 <body>
+<script>
+// Set iframe-mode body class BEFORE any chrome paints — prevents flash of cart/header/footer.
+// The main <script> block below also sets these (belt-and-suspenders), but this inline run
+// happens before the browser parses the visible elements.
+(function(){
+  var p = new URLSearchParams(location.search);
+  var mode = p.get('mode');
+  if(mode === 'shop') document.body.classList.add('shop-mode');
+  if(mode === 'product' && p.get('product')) document.body.classList.add('product-mode');
+  if(p.get('dev') === '1') document.body.classList.add('dev-mode');
+})();
+</script>
 
 <!-- LOADING SCREEN -->
 <div id="loadingScreen">
