@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1,user-scalable=no">
 <title>LUCKI VAULT — SHOP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://db.onlinewebfonts.com" crossorigin>
+<link rel="preload" href="vinyl.v2.glb" as="fetch" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
 @font-face {
@@ -865,37 +869,62 @@ const visObserver = new IntersectionObserver(entries=>{
 [...grid.children].forEach(card=>visObserver.observe(card));
 
 // ── LOAD GLBs ──────────────────────────────────────────────────────────────
-function loadGLBBuffer(type, buffer) {
+// retain=true keeps buffer globally (needed for drag-and-drop since there's no URL to re-fetch).
+// retain=false drops the buffer — modal will re-fetch from URL, served by browser cache.
+function loadGLBBuffer(type, buffer, retain) {
   cardScenes.forEach(sc => {
     if(PRODUCTS[sc.productIdx].type === type) {
       loadIntoScene(sc, buffer.slice(0), type);
     }
   });
-  if(type==='vinyl') vinylGLB = buffer;
-  if(type==='cd') cdGLB = buffer;
+  if(retain){
+    if(type==='vinyl') vinylGLB = buffer;
+    if(type==='cd') cdGLB = buffer;
+  } else {
+    if(type==='vinyl') vinylGLB = null;
+    if(type==='cd') cdGLB = null;
+  }
 }
 
 function loadGLBFile(type, file) {
   const reader = new FileReader();
-  reader.onload = ev => loadGLBBuffer(type, ev.target.result);
+  reader.onload = ev => loadGLBBuffer(type, ev.target.result, true);
   reader.readAsArrayBuffer(file);
 }
 
-// Auto-load GLBs from same directory
-(function autoLoadGLBs() {
+// Fetch vinyl immediately (used by 9 of 10 cards).
+// CD is fetched lazily when its card approaches the viewport.
+(function autoLoadVinyl() {
   const fill = document.getElementById('loadingFill');
-  let loaded = 0;
-  function oneDone() {
-    loaded++;
-    fill.style.width = (loaded/2*100)+'%';
-    if(loaded >= 2) setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'), 400);
-  }
+  const finish = ()=>{
+    fill.style.width = '100%';
+    setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'), 400);
+  };
   fetch('vinyl.v2.glb')
     .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
-    .then(buf=>{loadGLBBuffer('vinyl',buf);oneDone()}).catch(oneDone);
-  fetch('cd.v2.glb')
-    .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
-    .then(buf=>{loadGLBBuffer('cd',buf);oneDone()}).catch(oneDone);
+    .then(buf=>{loadGLBBuffer('vinyl',buf);finish();})
+    .catch(finish);
+})();
+
+// Lazy CD GLB load — fetch when the CD card is within 300px of viewport.
+(function lazyLoadCD(){
+  const cdIdx = PRODUCTS.findIndex(p => p.type === 'cd');
+  if(cdIdx < 0) return;
+  const cdCard = grid.children[cdIdx];
+  if(!cdCard) return;
+  let started = false;
+  const obs = new IntersectionObserver(entries=>{
+    if(started) return;
+    if(entries.some(e=>e.isIntersecting)){
+      started = true;
+      obs.disconnect();
+      fetch('cd.v2.glb')
+        .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+        .then(buf=>loadGLBBuffer('cd', buf))
+        .catch(e=>console.warn('CD GLB load failed:', e));
+    }
+  }, {rootMargin:'300px'});
+  obs.observe(cdCard);
 })();
 
 // ── DRAG & DROP ───────────────────────────────────────────────────────────
@@ -1177,7 +1206,17 @@ function openModal(idx){
   modalSC.dirty=true;
 
   const buf=prod.type==='cd'?cdGLB:vinylGLB;
-  if(buf)loadIntoScene(modalSC,buf.slice(0),prod.type,fitCameraToModel);
+  if(buf){
+    loadIntoScene(modalSC,buf.slice(0),prod.type,fitCameraToModel);
+  } else {
+    // Buffer was dropped after card parse — re-fetch (served instantly by browser cache if already loaded)
+    const url = prod.type==='cd' ? 'cd.v2.glb' : 'vinyl.v2.glb';
+    fetch(url).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer();})
+      .then(ab=>{
+        if(modalSC && modalSC.productIdx===idx) loadIntoScene(modalSC, ab, prod.type, fitCameraToModel);
+      })
+      .catch(e=>console.warn('Modal GLB load failed:', e));
+  }
 
   // OPEN VINYL button: hide for CD (no sleeve) and on mobile (canvas is square via CSS, Layout 2 wide-aspect breaks layout)
   const vinylBtn=document.querySelector('.modal-vinyl-btn');

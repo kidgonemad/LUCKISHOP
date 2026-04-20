@@ -158,17 +158,22 @@ Vinyl textures displayed as "zoomed / warped" after compression. Root cause: `-c
 
 **Rule of thumb:** if a GLB has runtime `mat.map` swaps (variant textures, user reskins), don't quantize the mesh. For "static" GLBs (like CD), `-cc` is fine.
 
-### Phase 2 — Lazy load + memory hygiene (1 hr)
-- Load vinyl GLB immediately (used by 9 cards)
-- Load CD GLB only when CD card enters viewport (extend existing IntersectionObserver)
-- Drop `vinylGLB`/`cdGLB` ArrayBuffers after parse
-- Keep Blob URL for modal re-parse fallback
+### Phase 2 — Lazy load + memory hygiene ✓ done 2026-04-20
 
-Add to `<head>`:
-```html
-<link rel="preload" as="fetch" href="vinyl.v2.glb" crossorigin>
-<link rel="preconnect" href="https://fonts.gstatic.com">
-```
+**Landed changes:**
+- `<head>`: `preconnect` for fonts.googleapis.com + fonts.gstatic.com + db.onlinewebfonts.com; `preload` for vinyl.v2.glb
+- Initial fetch is vinyl-only; loading bar completes on vinyl alone (CD no longer blocks the loading screen)
+- CD GLB fetched lazily via a dedicated `IntersectionObserver` on the CD card with `rootMargin:'300px'` — starts downloading ~300px before the card enters viewport
+- `loadGLBBuffer(type, buffer, retain)` signature: drops the ArrayBuffer after card parse when called with `retain=false` (fetch path); keeps it when `retain=true` (drag-and-drop path — no URL to re-fetch from)
+- `openModal` has a fallback: if the global buffer was dropped, it re-fetches from URL. Browser cache serves instantly if the file was loaded before. Guarded with `modalSC.productIdx === idx` check to avoid applying a stale response to a different modal.
+
+**Memory hygiene win:** ~11.6 MB of ArrayBuffers no longer retained indefinitely in the JS heap. Post-Phase-1 this is a smaller win than the original plan assumed (plan estimated 100 MB of buffers; post-compression it's ~11.6 MB), but still worth the consistency.
+
+**Perceived-load win:** page no longer waits for 9.3 MB CD to finish before hiding the loading screen. For users who never scroll to the CD card (most sessions), CD is never downloaded at all.
+
+**Uncertainty / follow-ups:**
+- Modal-fallback race condition guard (`modalSC.productIdx === idx`) is untested under rapid modal switching; could still attach a stale response if the user opens modal A, then B, before A's fetch resolves.
+- `rootMargin:'300px'` is a guess at "enough lead time so CD is ready when user scrolls to it"; may need tuning.
 
 ### Phase 3 — Self-host + modernize Three.js (2-3 hrs)
 
@@ -334,7 +339,7 @@ Flip a query param, don't redeploy.
 2. **Phase 1** — gltfpack on CD GLB only, conservative pass first ✓ done
 3. Stop, compare visually + measure file size ✓ done
 4. If good → gltfpack on vinyl GLB ✓ done
-5. **Phase 2** — lazy load + memory drop
+5. **Phase 2** — lazy load + memory drop ✓ done
 6. **Phase 3** — self-host Three.js + fonts
 7. Re-measure baseline. If targets met for desktop and high-end mobile, ship.
 8. **Phase 5** — cheap rendering (defer 4 — it's the hardest)
