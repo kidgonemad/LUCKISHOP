@@ -1,0 +1,326 @@
+{{ 'index.scss.css' | asset_url | stylesheet_tag }}
+
+<div id="bg"></div>
+
+<div id="items" style="--columns: {{ section.settings.columns }}; --img-scale: {{ section.settings.image_scale }}%; --title-size: {{ section.settings.title_size }}px; --title-x: {{ section.settings.title_x }}%; --title-y: {{ section.settings.title_y }}%; --price-size: {{ section.settings.price_size }}px; --price-x: {{ section.settings.price_x }}%; --price-y: {{ section.settings.price_y }}%; --gap: {{ section.settings.item_gap }}px;">
+    {% assign inject_number = settings.shop_collections_order %}
+    {% assign firstCount = 0 %}
+
+    {% for product in collections[settings.shop_collection_home].products %}
+      {% assign valid = true %}
+      {% for tag in product.tags %}
+        {% if tag == "multi-listing" %}
+          {% assign valid = false %}
+        {% endif %}
+      {% endfor %}
+
+      {% if valid == true and firstCount < inject_number %}
+        {% assign title_down = product.title | downcase %}
+        {% assign is_locked = false %}
+        {% assign is_soldout = false %}
+        {% if title_down contains 'coming soon' or title_down contains 'comingsoon' %}
+          {% assign is_locked = true %}
+        {% endif %}
+        {% if title_down contains 'orange' and title_down contains 'vinyl' %}
+          {% assign is_soldout = true %}
+        {% endif %}
+        <a href="{{ product.url | within: collection }}" {% if is_locked %}class="locked"{% elsif is_soldout %}class="soldout"{% endif %} style="{% include 'product-img-style' %}">
+          <img class="item" src="{{ product.featured_image.src | img_url: 'x800' }}">
+          {% if is_locked %}
+          {% else %}
+            <span class="item-title">{{ product.title }}</span>
+            <span class="item-price">{{ product.price | money }}</span>
+          {% endif %}
+        </a>
+        {% assign firstCount = firstCount | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+
+    {% if settings.shop_collection1 != blank %}
+      {% for product in collections[settings.shop_collection1].products limit:1 %}
+        {% if product.featured_image %}
+          {% assign title_down = product.title | downcase %}
+          {% assign is_locked = false %}
+          {% assign is_soldout = false %}
+          {% if title_down contains 'coming soon' or title_down contains 'comingsoon' %}
+            {% assign is_locked = true %}
+          {% endif %}
+          {% if title_down contains 'orange' and title_down contains 'vinyl' %}
+            {% assign is_soldout = true %}
+          {% endif %}
+          <a href="collections/{{ settings.shop_collection1 }}" {% if is_locked %}class="locked"{% elsif is_soldout %}class="soldout"{% endif %} style="{% include 'product-img-style' %}">
+            <img class="item" src="{{ product.featured_image.src | img_url: 'x800' }}">
+            {% if is_locked %}
+            {% else %}
+              <span class="item-title">{{ product.title }}</span>
+              <span class="item-price">{{ product.price | money }}</span>
+            {% endif %}
+          </a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% if settings.shop_collection2 != blank %}{% include 'collection-image' with settings.shop_collection2 %}{% endif %}
+    {% if settings.shop_collection3 != blank %}{% include 'collection-image' with settings.shop_collection3 %}{% endif %}
+    {% if settings.shop_collection4 != blank %}{% include 'collection-image' with settings.shop_collection4 %}{% endif %}
+    {% if settings.shop_collection5 != blank %}{% include 'collection-image' with settings.shop_collection5 %}{% endif %}
+    {% if settings.shop_collection6 != blank %}{% include 'collection-image' with settings.shop_collection6 %}{% endif %}
+    {% if settings.shop_collection7 != blank %}{% include 'collection-image' with settings.shop_collection7 %}{% endif %}
+    {% if settings.shop_collection8 != blank %}{% include 'collection-image' with settings.shop_collection8 %}{% endif %}
+    {% if settings.shop_collection9 != blank %}{% include 'collection-image' with settings.shop_collection9 %}{% endif %}
+    {% if settings.shop_collection10 != blank %}{% include 'collection-image' with settings.shop_collection10 %}{% endif %}
+
+    {% assign lastCount = 0 %}
+    {% for product in collections[settings.shop_collection_home].products %}
+      {% assign valid = true %}
+      {% for tag in product.tags %}
+        {% if tag == "multi-listing" %}
+          {% assign valid = false %}
+        {% endif %}
+      {% endfor %}
+
+      {% assign lastCount = lastCount | plus: 1 %}
+      {% if valid == true and lastCount > inject_number %}
+        {% assign title_down = product.title | downcase %}
+        {% assign is_locked = false %}
+        {% assign is_soldout = false %}
+        {% if title_down contains 'coming soon' or title_down contains 'comingsoon' %}
+          {% assign is_locked = true %}
+        {% endif %}
+        {% if title_down contains 'orange' and title_down contains 'vinyl' %}
+          {% assign is_soldout = true %}
+        {% endif %}
+        <a href="{{ product.url | within: collection }}" {% if is_locked %}class="locked"{% elsif is_soldout %}class="soldout"{% endif %} style="{% include 'product-img-style' %}">
+          <img class="item" src="{{ product.featured_image.src | img_url: 'x800' }}">
+          {% if is_locked %}
+          {% else %}
+            <span class="item-title">{{ product.title }}</span>
+            <span class="item-price">{{ product.price | money }}</span>
+          {% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+</div>
+
+<div id="container"></div>
+
+<style>
+  /* Locked / Coming Soon products */
+  #items a.locked {
+    cursor: not-allowed;
+  }
+
+  #items a.locked img.item {
+    filter: blur(12px);
+    transition: filter 0.4s ease;
+  }
+
+  #items a.locked.shaking img.item {
+    filter: blur(12px) grayscale(100%);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translate(var(--p-x, 0px), var(--p-y, 0px)); }
+    10% { transform: translate(calc(var(--p-x, 0px) - 8px), var(--p-y, 0px)); }
+    20% { transform: translate(calc(var(--p-x, 0px) + 8px), var(--p-y, 0px)); }
+    30% { transform: translate(calc(var(--p-x, 0px) - 6px), var(--p-y, 0px)); }
+    40% { transform: translate(calc(var(--p-x, 0px) + 6px), var(--p-y, 0px)); }
+    50% { transform: translate(calc(var(--p-x, 0px) - 4px), var(--p-y, 0px)); }
+    60% { transform: translate(calc(var(--p-x, 0px) + 4px), var(--p-y, 0px)); }
+    70% { transform: translate(calc(var(--p-x, 0px) - 2px), var(--p-y, 0px)); }
+    80% { transform: translate(calc(var(--p-x, 0px) + 2px), var(--p-y, 0px)); }
+    90% { transform: translate(calc(var(--p-x, 0px) - 1px), var(--p-y, 0px)); }
+  }
+
+  #items a.locked.shaking img.item {
+    animation: shake 0.6s ease;
+  }
+
+  /* Sold Out products */
+  #items a.soldout {
+    cursor: not-allowed;
+  }
+
+  #items a.soldout .item-title,
+  #items a.soldout .item-price {
+    background-image: linear-gradient(#ff6600, #ff6600);
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 0% 3px;
+    transition: background-size 0.4s ease;
+  }
+
+  #items a.soldout:hover .item-title,
+  #items a.soldout:hover .item-price {
+    background-size: 100% 3px;
+  }
+
+  #items a.soldout img.item {
+    transition: filter 0.4s ease;
+  }
+
+  #items a.soldout.shaking img.item {
+    filter: grayscale(100%);
+    animation: shake 0.6s ease;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Block click on locked + soldout products + same shake
+  document.querySelectorAll('#items a.locked, #items a.soldout').forEach(function(el) {
+    var ciphers = el.querySelectorAll('.cipher');
+
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add('shaking');
+      setTimeout(function() {
+        el.classList.remove('shaking');
+      }, 700);
+    });
+
+    // On hover: reveal the text
+    el.addEventListener('mouseenter', function() {
+      ciphers.forEach(function(c) {
+        c.textContent = c.getAttribute('data-reveal');
+      });
+    });
+
+    // On hover off: back to dots
+    el.addEventListener('mouseleave', function() {
+      ciphers.forEach(function(c) {
+        var dots = '';
+        for (var i = 0; i < c.getAttribute('data-reveal').length; i++) {
+          dots += '●';
+        }
+        c.textContent = dots;
+      });
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Shop Page",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "shop_collection_home",
+      "label": "Featured Collection"
+    },
+    {
+      "type": "range",
+      "id": "shop_collections_order",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "label": "Number of Products Before Collections",
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "label": "Columns",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "item_gap",
+      "min": 0,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Gap Between Items",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "range",
+      "id": "image_scale",
+      "min": 50,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Image Scale",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Title"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 8,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Title Font Size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "title_x",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Title Horizontal Position",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "title_y",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Title Vertical Position",
+      "default": 85
+    },
+    {
+      "type": "header",
+      "content": "Price"
+    },
+    {
+      "type": "range",
+      "id": "price_size",
+      "min": 8,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Price Font Size",
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "price_x",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Price Horizontal Position",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "price_y",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Price Vertical Position",
+      "default": 92
+    }
+  ]
+}
+{% endschema %} 

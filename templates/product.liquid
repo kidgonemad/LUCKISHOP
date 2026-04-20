@@ -1,0 +1,826 @@
+<div class="product-page-wrapper">
+  <div id="product-container">
+    {% assign current_variant = product.selected_or_first_available_variant %}
+    {% assign featured_image = current_variant.featured_image | default: product.featured_image %}
+
+    <div id="image-container">
+      {% for image in product.images %}
+        {% if forloop.first == true %}
+          <img class="product-images big" src="{{ image.src | img_url: 'x1600' }}" alt="{{ image.alt | escape }}">
+        {% else %}
+          <img class="product-images big disabled" src="{{ image.src | img_url: 'x1600' }}" alt="{{ image.alt | escape }}">
+        {% endif %}
+      {% endfor %}
+      <!-- <div id="back-button" class="button"><img src="{{ 'arrow.svg' | asset_url }}"></div>
+      <div id="next-button" class="button"><img src="{{ 'arrow.svg' | asset_url }}"></div> -->
+    </div>
+    <div id="thumbnails">
+      {% for image in product.images %}
+<!--     	<div class="thumbnail-slide"> -->
+          {% if forloop.first == true %}
+            <img class="thumbnail curr" src="{{ image.src | img_url: 'x200' }}" alt="{{ image.alt | escape }}">
+          {% else %}
+            <img class="thumbnail" src="{{ image.src | img_url: 'x200' }}" alt="{{ image.alt | escape }}">
+          {% endif %}
+<!--     	</div> -->
+      {% endfor %}
+    </div>
+
+    <div id="product-title">{{ product.title }}</div>
+    <div id="product-price">{{ current_variant.price | money }}</div>
+    <div id="product-price-comp">{{ current_variant.compare_at_price | money }}</div>
+
+    {% assign product_type = product.title | downcase %}
+
+    <form action="/cart/add" method="post" enctype="multipart/form-data" id="AddToCartForm">
+      {% assign is_hoodie = false %}
+      {% if product_type contains 'hoodie' %}
+        {% assign is_hoodie = true %}
+      {% endif %}
+
+      {% assign is_music = false %}
+      {% if product_type contains 'vinyl' or product_type contains 'cd' %}
+        {% assign is_music = true %}
+      {% endif %}
+
+      <select name="id" id="productSelect" {% if is_hoodie %}disabled{% endif %} {% if is_music %}style="display:none;"{% endif %}>
+        <option id="select-size" selected='selected' value="">Select Unit</option>
+        {% assign soldOut = true %}
+        {% for variant in product.variants %}
+          {% if variant.available and is_hoodie == false %}
+            {% assign soldOut = false %}
+            <option value="{{ variant.id }}">
+              {{ variant.title }}
+            </option>
+          {% else %}
+            <option disabled="disabled">
+              {{ variant.title }} - sold out
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
+      {% if is_music %}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+      {% endif %}
+
+      {% if is_hoodie %}
+        <div class="sold-out-message">This item is currently unavailable</div>
+      {% endif %}
+
+      <button type="submit" name="add" id="AddToCart" class="{% if is_hoodie %}disabled{% elsif is_music %}music-btn{% else %}inactive{% endif %}" {% if is_hoodie %}disabled{% endif %}>
+        {% if is_hoodie %}Sold Out{% else %}Add to cart{% endif %}
+      </button>
+    </form>
+
+    <div id="product-details">
+      {% if product_type contains 'sweats' %}
+        <div class="size-chart-link">
+          <a href="#" onclick="openSizeChart('sweats', event)">Size Chart</a>
+        </div>
+        <ul class="product-features">
+          <li>16oz | 100% French Terry Cotton</li>
+          <li>Straight leg silhouette</li>
+          <li>Hidden zipper pocket in left pocket</li>
+          <li>True to size</li>
+        </ul>
+      {% elsif product_type contains 'hoodie' %}
+        <div class="size-chart-link">
+          <a href="#" onclick="openSizeChart('hoodie', event)">Size Chart</a>
+        </div>
+        <ul class="product-features">
+          <li>16oz | 100% French Terry cotton</li>
+          <li>True to size</li>
+          <li>Preshrunk</li>
+          <li>Kangaroo pocket | Stitching details on the corner of the pocket</li>
+          <li>Cover stitch on sleeve and waist ribbing</li>
+          <li>Regular Black</li>
+        </ul>
+      {% elsif product_type contains 'tee' %}
+        <div class="size-chart-link">
+          <a href="#" onclick="openSizeChart('tee', event)">Size Chart</a>
+        </div>
+        <ul class="product-features">
+          <li>Unisex</li>
+          <li>Made in Los Angeles, Calif.</li>
+          <li>6.5 oz/yd2/ 220 g/m2</li>
+          <li>18/1 Open-end USA Cotton</li>
+          <li>100% Shrink Free Garment dye Cotton</li>
+          {% if product.title contains 'DRB CROSSED TEE' or product.title contains 'D.R.B TEE' %}
+            <li>Vintage Black</li>
+          {% elsif product.title contains 'LFDS TEE' or product.title contains 'BLACK LUCKI TEE' or product.title contains 'TURNED HER INTO A STAR TEE' %}
+            <li>Regular Black</li>
+          {% endif %}
+        </ul>
+      {% elsif product_type contains 'long sleeve' %}
+        <div class="size-chart-link">
+          <a href="#" onclick="openSizeChart('longsleeve', event)">Size Chart</a>
+        </div>
+        <ul class="product-features">
+          <li>Unisex</li>
+          <li>Made in Los Angeles, Calif.</li>
+          <li>6.5 oz/yd2/ 220 g/m2</li>
+          <li>18/1 Open-end USA Cotton</li>
+          <li>100% Shrink Free Garment dye Cotton</li>
+          <li>EVERY FIELD design on both sleeves</li>
+          {% if product.title contains 'EVERY FIELD LONG SLEEVE' %}
+            <li>Vintage Black</li>
+          {% endif %}
+        </ul>
+      {% elsif product_type contains 'signed' and product_type contains 'clear' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>SIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Escape / Clear White Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'signed' and product_type contains 'brown' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>SIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Meltdown / Tiger Eye Brown</li>
+        </ul>
+      {% elsif product_type contains 'signed' and product_type contains 'grey' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>SIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Overdose / Smoke Grey Swirl Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'signed' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>SIGNED</li>
+          <li>2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Transparent Orange Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'orange vinyl' %}
+        <ul class="product-features">
+          <li>UNSIGNED</li>
+          <li>2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Transparent Orange Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'meltdown' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>UNSIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Meltdown / Tiger Eye Brown</li>
+        </ul>
+      {% elsif product_type contains 'overdose' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>UNSIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Overdose / Smoke Grey Swirl Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'black vinyl' %}
+        <ul class="product-features">
+          <li>2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Solid Black Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'escape' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>UNSIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Escape / Clear White Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'clear' and product_type contains 'vinyl' %}
+        <ul class="product-features">
+          <li>UNSIGNED</li>
+          <li>Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves</li>
+          <li>Escape / Clear White Vinyl</li>
+        </ul>
+      {% elsif product_type contains 'cd' %}
+        <ul class="product-features">
+          <li>Jewel Case CD, Panel Insert</li>
+          <li>Standard Disk</li>
+        </ul>
+      {% endif %}
+      <p class="preorder-note"><strong>Note:</strong> This is a PRE-ORDER item. By purchasing, you secure your copy ahead of the official release. Please note that vinyl production is currently underway. Shipping is scheduled to begin on May 12th.</p>
+    </div>
+
+    <div id="description">{{ product.description }}</div>
+    <div id="support" onclick="openSupportInfo()">Contact Support</div>
+    <a id="email-icon" href="mailto:luckivaultinfo@gmail.com">
+      <img src="{{ 'mail.svg' | asset_url }}" alt="Email Support">
+    </a>
+  </div>
+</div>
+
+<style>
+  main {
+    margin-top: -150px !important;
+  }
+
+  #thumbnails {
+    margin-top: -100.99px;
+  }
+
+  @media (max-width: 768px) {
+    main {
+      margin-top: -110px !important;
+    }
+
+    #thumbnails {
+      margin-top: 0;
+    }
+  }
+
+  .product-page-wrapper {
+    min-height: 100vh;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 250px;
+  }
+  
+  #product-price-comp {
+    text-decoration: line-through;
+    color: red;
+  }
+
+  #product-price-comp:empty {
+    display: none;
+  }
+
+  #AddToCartForm {
+    margin-top: 0;
+  }
+
+  .preorder-note {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: monospace;
+    font-size: 14 px;
+    line-height: 1.6;
+    color: black;
+  }
+
+  #product-details {
+    background: white;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 15px 0;
+    width: calc(100% - 50px);
+    color: black;
+    display: block;
+  }
+
+  .product-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .product-features li {
+    font-family: 'gog-regular', monospace;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size:60px;
+    line-height: 1.5;
+    color: black;
+  }
+
+  .product-features li:last-child {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .product-images.big {
+    display: none;
+  }
+  
+  .product-images.big:not(.disabled) {
+    display: block;
+  }
+
+  #product-container {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    margin: 0 auto;
+    padding: 40px;
+    z-index: 1;
+    background: none;
+    margin-top: 20px;
+    box-sizing: border-box; /* Add this to include padding in width calculation */
+  }
+
+  @media only screen and (max-width: 768px) {
+    #product-container {
+      padding: 20px;
+      width: 100%;
+    }
+
+    #product-details,
+    #product-title,
+    #product-price,
+    #product-price-comp,
+    #description,
+    #AddToCartForm,
+    #support {
+      width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      box-sizing: border-box;
+      color: black !important;
+    }
+
+    #image-container {
+      width: 100% !important;
+      left: 0 !important;
+      margin: 0 0 15px 0 !important;
+    }
+
+    #thumbnails {
+      width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
+
+  #product-title {
+    background: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    width:calc(100% - 50px);
+    font-size: 60px !important;
+    margin: 0px 0px 15px 0px;
+    font-weight:600;
+    color: black !important;
+    font-family: 'gog-regular', monospace;
+  }
+
+  #product-price {
+    background: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    width:calc(100% - 50px);
+    font-size: 50px !important;
+    margin: 15px 0px 15px 0px;
+    font-weight: 500;
+    color: black !important;
+  }
+
+  #support {
+    background: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 15px 0;
+    width: calc(100% - 50px);
+    text-align: center;
+    color: black !important;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  #email-icon {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 999;
+  }
+
+  #email-icon img {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  .support-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .support-content {
+    background: white;
+    padding: 30px;
+    border-radius: 5px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    color: black;
+  }
+
+  .support-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .support-content p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  .support-close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    cursor: pointer;
+    font-size: 24px;
+  }
+
+  .size-chart-link {
+    margin-bottom: 15px;
+  }
+  
+  .size-chart-link a {
+    color: black;
+    text-decoration: underline;
+    font-family: 'gog-regular', monospace;
+    cursor: pointer;
+    font-size: 35px;
+  }
+
+  .size-chart-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .size-chart-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .size-chart-close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    cursor: pointer;
+    font-size: 24px;
+  }
+
+  .size-chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .size-chart-table th,
+  .size-chart-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .size-chart-table th {
+    background-color: #f8f8f8;
+  }
+
+  @media (max-width: 768px) {
+    .size-chart-content {
+      width: 95%;
+      padding: 15px;
+    }
+  }
+
+  .sold-out-message {
+    background: rgba(255, 0, 0, 0.1);
+    color: red;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  button.disabled {
+    background-color: #999 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+  }
+
+  select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  button.music-btn {
+    background-color: black !important;
+    color: white !important;
+    cursor: pointer;
+  }
+</style>
+
+<!-- Size Chart Modals -->
+<div id="sizeChartModal" class="size-chart-modal">
+  <div class="size-chart-content">
+    <span class="size-chart-close" onclick="closeSizeChart()">&times;</span>
+    
+    <!-- Sweatpants Size Chart -->
+    <div id="sweatsChart" class="size-chart-section" style="display: none;">
+      <h2>Size Chart - Sweatpants</h2>
+      <table class="size-chart-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>S</th>
+            <th>M</th>
+            <th>L</th>
+            <th>XL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>WAIST</td>
+            <td>14 1/4</td>
+            <td>15 1/4</td>
+            <td>16 1/4</td>
+            <td>17 1/4</td>
+          </tr>
+          <tr>
+            <td>LENGTH</td>
+            <td>40</td>
+            <td>41 1/2</td>
+            <td>43</td>
+            <td>44 1/2</td>
+          </tr>
+          <tr>
+            <td>INSEAM</td>
+            <td>29 1/4</td>
+            <td>30 1/4</td>
+            <td>31 1/4</td>
+            <td>32 1/4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Hoodie Size Chart -->
+    <div id="hoodieChart" class="size-chart-section" style="display: none;">
+      <h2>Size Chart - Hoodies</h2>
+      <table class="size-chart-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>S</th>
+            <th>M</th>
+            <th>L</th>
+            <th>XL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SLEEVE</td>
+            <td>25 1/2</td>
+            <td>26</td>
+            <td>26 1/2</td>
+            <td>27</td>
+          </tr>
+          <tr>
+            <td>CHEST</td>
+            <td>21 1/2</td>
+            <td>23</td>
+            <td>25</td>
+            <td>27</td>
+          </tr>
+          <tr>
+            <td>LENGTH</td>
+            <td>28</td>
+            <td>29</td>
+            <td>30</td>
+            <td>31</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- T-Shirt Size Chart -->
+    <div id="teeChart" class="size-chart-section" style="display: none;">
+      <h2>Size Chart - T-Shirts</h2>
+      <table class="size-chart-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>S</th>
+            <th>M</th>
+            <th>L</th>
+            <th>XL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>FRONT BODY</td>
+            <td>27 3/4</td>
+            <td>28 5/8</td>
+            <td>29 1/2</td>
+            <td>30 1/2</td>
+          </tr>
+          <tr>
+            <td>CHEST</td>
+            <td>19</td>
+            <td>21</td>
+            <td>22 7/8</td>
+            <td>24 3/4</td>
+          </tr>
+          <tr>
+            <td>SHOULDER</td>
+            <td>19</td>
+            <td>21</td>
+            <td>22 7/8</td>
+            <td>24 3/4</td>
+          </tr>
+          <tr>
+            <td>SLEEVE</td>
+            <td>8 3/4</td>
+            <td>9</td>
+            <td>9 1/4</td>
+            <td>9 1/2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Long Sleeve Size Chart -->
+    <div id="longsleeveChart" class="size-chart-section" style="display: none;">
+      <h2>Size Chart - Long Sleeve</h2>
+      <table class="size-chart-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>S</th>
+            <th>M</th>
+            <th>L</th>
+            <th>XL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>FRONT BODY</td>
+            <td>26 7/8</td>
+            <td>27 7/8</td>
+            <td>28 5/8</td>
+            <td>29 7/8</td>
+          </tr>
+          <tr>
+            <td>CHEST</td>
+            <td>19</td>
+            <td>21</td>
+            <td>23</td>
+            <td>25</td>
+          </tr>
+          <tr>
+            <td>SLEEVE</td>
+            <td>24 1/4</td>
+            <td>24 1/2</td>
+            <td>24 7/8</td>
+            <td>25 1/8</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Support Info Modal -->
+<div id="supportModal" class="support-modal">
+  <div class="support-content">
+    <span class="support-close" onclick="closeSupportInfo()">&times;</span>
+    <h2>Shipping & Return Policy</h2>
+    <p>All sales are final. If you receive a defective or incorrect item, we'll replace it at no extra cost.</p>
+    <p>Customers are responsible for reshipping fees if a package is returned due to an incorrect address—please double-check your info before ordering!</p>
+    <p>Shipping will begin the earliest May 12th. For any other concerns please contact us via email below.</p>
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="mailto:luckivaultinfo@gmail.com" style="text-decoration: none;">
+        <img src="{{ 'mail.svg' | asset_url }}" alt="Email Support" style="width: 32px; height: 32px;">
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var soldOut = {% if soldOut %}true{% else %}false{% endif %};
+    var isMusic = {% if is_music %}true{% else %}false{% endif %};
+    var addToCartButton = document.getElementById('AddToCart');
+    var productSelect = document.getElementById('productSelect');
+
+    if(soldOut) {
+      addToCartButton.textContent = "Sold out";
+      addToCartButton.disabled = true;
+    }
+
+    productSelect.addEventListener('change', function() {
+      if (this.value) {
+        addToCartButton.classList.remove('inactive');
+        addToCartButton.disabled = false;
+        document.getElementById('select-size').disabled = true;
+      }
+    });
+
+    document.getElementById('AddToCartForm').addEventListener('submit', function(e) {
+      if (!isMusic && !productSelect.value) {
+        e.preventDefault();
+        alert('Please select a unit');
+        return false;
+      }
+    });
+
+    // Image switching functionality
+    var productImages = document.querySelectorAll('.product-images.big');
+    var thumbnails = document.querySelectorAll('.thumbnail');
+    
+    thumbnails.forEach(function(thumbnail, index) {
+      thumbnail.addEventListener('click', function() {
+        // Hide all product images
+        productImages.forEach(function(img) {
+          img.classList.add('disabled');
+        });
+        
+        // Remove 'curr' class from all thumbnails
+        thumbnails.forEach(function(thumb) {
+          thumb.classList.remove('curr');
+        });
+        
+        // Show selected image and highlight thumbnail
+        productImages[index].classList.remove('disabled');
+        thumbnail.classList.add('curr');
+      });
+    });
+  });
+
+  function openSizeChart(type, event) {
+    event.preventDefault();
+    const modal = document.getElementById('sizeChartModal');
+    
+    // Hide all size charts first
+    const charts = document.querySelectorAll('.size-chart-section');
+    charts.forEach(chart => chart.style.display = 'none');
+    
+    // Show the selected size chart
+    const selectedChart = document.getElementById(type + 'Chart');
+    if (selectedChart) {
+      selectedChart.style.display = 'block';
+    }
+    
+    modal.style.display = 'flex';
+  }
+
+  function closeSizeChart() {
+    document.getElementById('sizeChartModal').style.display = 'none';
+  }
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+    var modal = document.getElementById('sizeChartModal');
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  function openSupportInfo() {
+    document.getElementById('supportModal').style.display = 'flex';
+    document.getElementById('email-icon').style.display = 'block';
+  }
+
+  function closeSupportInfo() {
+    document.getElementById('supportModal').style.display = 'none';
+  }
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+    var modal = document.getElementById('supportModal');
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  }
+</script>

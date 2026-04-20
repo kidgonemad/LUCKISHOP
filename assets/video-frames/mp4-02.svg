@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5248 3214" fill="none">
+  <!-- Label tab -->
+  <path d="M4580 0 L5248 0 L5248 120 L4540 120 Z" fill="#e54d29"/>
+  <text x="4700" y="95" font-family="monospace" font-weight="bold" font-size="90" fill="black" letter-spacing="8">mp4-02</text>
+  <!-- Solid border -->
+  <path d="M0 118 L5248 118 L5248 3214 L0 3214 Z M175 295 L175 3039 L5073 3039 L5073 295 Z" fill="#e54d29" fill-rule="evenodd"/>
+</svg>

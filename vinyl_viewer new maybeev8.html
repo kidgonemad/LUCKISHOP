@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1,user-scalable=no">
+<title>LUCKI VAULT — SHOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: "Dot Matrix V2";
+  src: url("https://db.onlinewebfonts.com/t/64d5e919dd297465bd1e912b404a8576.woff2") format("woff2"),
+       url("https://db.onlinewebfonts.com/t/64d5e919dd297465bd1e912b404a8576.woff") format("woff");
+}
+@font-face {
+  font-family: "gog-regular";
+  src: url("assets/gog-regular.otf") format("opentype");
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#fff;color:#000;font-family:"Dot Matrix V2",monospace;
+  min-height:100vh;overflow-x:hidden;
+  cursor:url('assets/mouse.png'),auto !important;
+}
+*{cursor:url('assets/mouse.png'),auto !important}
+a,button,[role="button"]{cursor:url('assets/mouse.png'),pointer !important}
+
+/* ── ANNOUNCEMENT BAR ── */
+.announcement-bar{
+  position:fixed;top:0;left:0;width:100%;height:20px;
+  background:#e54d29;z-index:10001;overflow:hidden}
+.scroll-text{
+  display:inline-block;white-space:nowrap;
+  animation:scrollAnnounce 30s linear infinite;padding-left:100%}
+.scroll-text span{
+  display:inline-block;color:#000;font-size:15px;line-height:20px;
+  font-family:"Dot Matrix V2",monospace;letter-spacing:1px}
+@keyframes scrollAnnounce{
+  0%{transform:translate3d(0,0,0)}
+  100%{transform:translate3d(-100%,0,0)}}
+
+/* ── HEADER ── */
+.top-header{
+  position:relative;z-index:100;width:100%;
+  background:rgba(255,255,255,0.95);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s ease;
+  margin-top:20px}
+.header-inner{
+  width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 0}
+.header-links{
+  width:100%;text-align:center;display:flex;
+  justify-content:center;gap:clamp(20px,5vw,40px)}
+.header-links a{
+  font-family:"gog-regular",monospace;color:#000;text-decoration:none;
+  font-size:clamp(24px,4vw,60px);letter-spacing:clamp(1px,0.2vw,3px);
+  opacity:0.8;transition:opacity .3s ease;
+  padding:clamp(6px,1vw,10px) clamp(8px,1.5vw,15px);white-space:nowrap}
+.header-links a:hover{opacity:1}
+
+/* ── CART ── */
+#cart{
+  z-index:10000;position:fixed;
+  height:clamp(20px,2.5vw,30px);width:clamp(20px,2.5vw,30px);
+  right:clamp(35px,5vw,75px);top:clamp(15px,2vw,45px);
+  text-decoration:none}
+#cart img{
+  position:absolute;width:200%;height:200%;
+  object-fit:contain}
+#cart:hover{opacity:.6}
+#cart-quan{
+  z-index:10;position:absolute;
+  width:17px;height:17px;right:-60px;top:15px;
+  border-radius:50%;background:white;color:black;
+  text-align:center;font-size:22px;line-height:26px;
+  font-family:'gog-regular',monospace;font-weight:bold;
+  border:2px solid white;padding-left:2px}
+#cart-quan.disabled{display:none}
+
+/* ── MAIN / ITEMS GRID ── */
+main{position:relative;width:100%;margin-top:-45px}
+#items{
+  z-index:10;position:relative;
+  width:calc(100% - 60px);max-width:1400px;margin:0 auto;
+  overflow:hidden;padding-bottom:80px;padding-top:20px;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:20px}
+#items>*{font-size:0}
+
+/* ── PRODUCT CARD ── */
+#items a{
+  display:block;width:calc(100% / 2 - 20px);box-sizing:border-box;
+  position:relative;transition:transform .3s ease;font-size:initial;
+  align-self:flex-start;text-decoration:none;color:#000;overflow:hidden}
+#items a:hover{transform:scale(1.02)}
+
+#items a canvas.card-canvas{
+  position:relative;width:100%;height:auto;display:block;margin:0 auto;
+  aspect-ratio:1}
+
+#items a .item-title{
+  position:absolute;left:50%;top:85%;transform:translate(-50%,-50%);
+  font-family:"Dot Matrix V2",monospace;color:#000;
+  font-size:14px;white-space:nowrap;pointer-events:auto;text-decoration:none;cursor:pointer;
+  background-image:linear-gradient(#ff6600,#ff6600);
+  background-repeat:no-repeat;background-position:left center;
+  background-size:0% 3px;transition:background-size .4s ease;padding-bottom:2px}
+
+#items a .item-price{
+  position:absolute;left:50%;top:92%;transform:translate(-50%,-50%);
+  font-family:"Dot Matrix V2",monospace;color:#000;
+  font-size:13px;white-space:nowrap;pointer-events:auto;cursor:pointer;
+  background-image:linear-gradient(#ff6600,#ff6600);
+  background-repeat:no-repeat;background-position:left center;
+  background-size:0% 3px;transition:background-size .4s ease;padding-bottom:2px}
+
+.flip-btn{
+  position:absolute;bottom:0;right:0;z-index:5;
+  width:25%;height:25%;cursor:pointer;
+  pointer-events:all;
+  background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0;color:transparent}
+.flip-btn:hover{}
+
+/* ── SOLD OUT ── */
+#items a.soldout{cursor:not-allowed}
+#items a.soldout:hover{transform:none}
+#items a.soldout:hover .item-title,
+#items a.soldout:hover .item-price{background-size:100% 3px}
+#items a.soldout canvas.card-canvas{transition:filter .4s ease}
+#items a.soldout.shaking canvas.card-canvas{filter:grayscale(100%)}
+
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  10%{transform:translateX(-8px)}
+  20%{transform:translateX(8px)}
+  30%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  50%{transform:translateX(-4px)}
+  60%{transform:translateX(4px)}
+  70%{transform:translateX(-2px)}
+  80%{transform:translateX(2px)}
+  90%{transform:translateX(-1px)}}
+#items a.shaking{animation:shake .6s ease}
+
+/* ── FOOTER ── */
+.site-footer{
+  background-color:#e54d29;color:#fff;padding:20px 0;text-align:center;
+  position:relative;bottom:0;width:100%}
+.footer-content{max-width:1200px;margin:0 auto;padding:0 20px}
+.footer-links{margin-bottom:15px}
+.footer-links a{
+  color:#fff;text-decoration:none;margin:0 15px;
+  font-size:40px;font-family:'gog-regular',monospace;
+  transition:opacity .3s ease;display:inline-block}
+.footer-links a:hover{opacity:.7}
+.footer-copyright{font-size:12px;opacity:.8;font-family:'Roboto',sans-serif}
+.footer-copyright a{color:#fff;text-decoration:none;transition:opacity .3s ease}
+.footer-copyright a:hover{opacity:.7}
+
+/* ── RESKIN PANEL ── */
+#reskinPanel{position:fixed;right:0;top:20px;bottom:0;z-index:300;
+  background:rgba(0,0,0,0.92);border-left:1px solid #333;width:220px;
+  display:none;flex-direction:column;overflow-y:auto;padding:14px;
+  transform:translateX(100%);transition:transform .25s ease}
+#reskinPanel.open{transform:translateX(0)}
+#reskinPanel h3{font-size:9px;color:#888;letter-spacing:.2em;margin-bottom:10px;
+  padding-bottom:8px;border-bottom:1px solid #333;
+  display:flex;justify-content:space-between;align-items:center}
+#reskinSlot{font-size:8px;color:#555;margin-bottom:10px;padding:6px 8px;
+  background:#111;border-radius:2px;min-height:20px}
+#reskinRows{display:flex;flex-direction:column;gap:4px}
+.rsk{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid #222}
+.rsk-name{font-size:9px;color:#888;cursor:pointer;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;max-width:120px;
+  padding:2px 4px;border-radius:2px;transition:all .15s}
+.rsk-name:hover{color:#ccc}
+.rsk-name.rsel{color:#ff6600;outline:1px solid #444}
+.rsk-btn{padding:3px 8px;border:1px solid #444;border-radius:2px;cursor:pointer;
+  font-size:8px;color:#888;background:none;transition:all .2s;white-space:nowrap}
+.rsk-btn:hover{border-color:#fff;color:#fff}
+.rsk-btn.rdone{border-color:rgba(229,77,41,.4);color:#e54d29}
+.rsk-file{display:none}
+#texControls{margin-top:8px;padding-top:8px;border-top:1px solid #333;display:none;flex-direction:column;gap:6px}
+#texControls.open{display:flex}
+#texControls h4{font-size:8px;color:#e54d29;letter-spacing:.15em;margin:0}
+.tex-row{display:flex;align-items:center;gap:6px}
+.tex-row label{font-size:7px;color:#888;letter-spacing:.1em;min-width:36px;text-transform:uppercase}
+.tex-row input[type=range]{flex:1;accent-color:#e54d29;height:3px;cursor:pointer}
+.tex-row .tex-val{font-size:7px;color:#e54d29;min-width:28px;text-align:right}
+#texReset{padding:3px 8px;background:none;border:1px solid #333;border-radius:2px;
+  color:#888;font-size:7px;letter-spacing:.1em;cursor:pointer;font-family:"Dot Matrix V2",monospace;transition:all .2s}
+#texReset:hover{border-color:#e54d29;color:#e54d29}
+#reskinPresets{margin-top:10px;padding-top:10px;border-top:1px solid #333}
+#reskinPresets h4{font-size:8px;color:#555;letter-spacing:.15em;margin-bottom:6px}
+#presetBtns{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.pbtn{padding:2px 7px;border:1px solid #333;border-radius:2px;cursor:pointer;
+  font-size:8px;color:#888;background:none;transition:all .2s}
+.pbtn:hover{border-color:#fff;color:#fff}
+.pbtn.pact{border-color:rgba(229,77,41,.5);color:#e54d29}
+#presetSaveRow{display:flex;gap:4px}
+#presetInp{flex:1;background:#111;border:1px solid #333;border-radius:2px;
+  color:#aaa;font-size:8px;padding:3px 5px;outline:none}
+#presetInp::placeholder{color:#333}
+#presetSave{padding:3px 8px;background:#e54d29;color:#fff;border:none;
+  border-radius:2px;cursor:pointer;font-size:8px;letter-spacing:.08em}
+#reskinKey{position:fixed;bottom:32px;right:16px;z-index:250;
+  font-size:8px;letter-spacing:.15em;color:#ccc;pointer-events:none;
+  font-family:"Dot Matrix V2",monospace}
+
+/* ── PRODUCT PAGE (MODAL) ── */
+#modal{position:fixed;inset:0;z-index:500;background:#fff;
+  display:none;overflow-y:auto;overflow-x:hidden;opacity:0;transition:opacity .3s}
+#modal.open{display:block;opacity:1}
+#modal::-webkit-scrollbar{width:0;display:none}
+.modal-inner{position:relative;width:100%;max-width:1200px;margin:0 auto;
+  padding:40px;box-sizing:border-box;padding-top:20px;
+  display:flex;flex-wrap:wrap;gap:0}
+.modal-left{width:50%;position:relative;padding-right:30px;box-sizing:border-box}
+.modal-right{width:50%;box-sizing:border-box;padding-top:10px}
+.modal-canvas-wrap{position:relative;width:100%;background:#fff}
+#modalCanvas{display:block;width:100%;aspect-ratio:1;max-height:70vh}
+.modal-title{padding:0 0 10px;margin:0;
+  font-size:24px;font-weight:600;color:#000;
+  font-family:'gog-regular',monospace}
+.modal-price{padding:0;font-size:28px;font-weight:400;color:#000;
+  margin:0 0 30px;font-family:'Dot Matrix V2',monospace}
+.modal-add-btn{width:100%;height:50px;
+  background:rgba(20,20,20,1);color:#fff;border-radius:5px;border:none;
+  font-size:16px;cursor:pointer;margin:0 0 30px;
+  font-family:'Roboto',sans-serif;transition:opacity .2s}
+.modal-add-btn:hover{opacity:.8}
+.modal-add-btn.adding{opacity:.5;pointer-events:none}
+.modal-add-btn.added{background:#2ecc40}
+.modal-details{padding:0;margin:0;color:#000}
+.modal-features{list-style:none;padding:0;margin:0}
+.modal-features li{font-family:'gog-regular',monospace;padding:12px 0;
+  border-bottom:1px solid rgba(0,0,0,.1);
+  font-size:22px;line-height:1.4;color:#000}
+.modal-features li:first-child{border-top:1px solid rgba(0,0,0,.1)}
+.modal-preorder{margin-top:20px;padding-top:15px;border-top:1px solid rgba(0,0,0,.1);
+  font-family:'Dot Matrix V2',monospace;font-size:12px;line-height:1.6;color:#000}
+.modal-support{margin-top:30px;text-align:center;font-family:'Dot Matrix V2',monospace;
+  font-size:14px;font-weight:bold;font-style:italic;color:#000;cursor:pointer}
+.modal-vinyl-btn{width:100%;padding:10px;margin-top:10px;background:none;
+  border:1px solid #ddd;border-radius:5px;cursor:pointer;font-family:'Dot Matrix V2',monospace;
+  font-size:12px;letter-spacing:.15em;color:#666;transition:all .2s}
+.modal-vinyl-btn:hover{border-color:#000;color:#000}
+.modal-support:hover{opacity:.7}
+@media(max-width:768px){
+  .modal-inner{padding:20px;flex-direction:column}
+  .modal-left{width:100%;padding-right:0;margin-bottom:20px}
+  .modal-right{width:100%}
+  .modal-title{font-size:20px}
+  .modal-price{font-size:22px}
+  .modal-features li{font-size:18px}
+}
+
+/* ── DROP BANNER ── */
+.drop-banner{position:fixed;inset:0;z-index:1000;background:rgba(255,255,255,.95);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  pointer-events:none;opacity:0;transition:opacity .25s}
+.drop-banner.visible{opacity:1;pointer-events:all}
+.drop-icon{width:56px;height:56px;border:2px dashed #e54d29;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;animation:pulse 1.5s ease infinite}
+.drop-icon svg{stroke:#e54d29;width:24px;height:24px}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.drop-title{font-size:12px;letter-spacing:.3em;color:#666;font-family:"Dot Matrix V2",monospace}
+.drop-hint{font-size:10px;letter-spacing:.1em;color:#aaa;font-family:"Dot Matrix V2",monospace}
+
+/* ── LOADING ── */
+#loadingScreen{position:fixed;inset:0;z-index:9999;background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .5s}
+#loadingScreen.hidden{opacity:0;pointer-events:none}
+.loading-logo{font-size:12px;letter-spacing:.4em;color:#999;
+  font-family:"Dot Matrix V2",monospace;animation:loadPulse 2s ease infinite}
+.loading-bar{width:120px;height:2px;background:#eee;border-radius:1px;overflow:hidden}
+.loading-fill{height:100%;background:#e54d29;width:0%;transition:width .3s}
+@keyframes loadPulse{0%,100%{opacity:.3}50%{opacity:.8}}
+
+/* ── MODEL CONTROLS ── */
+#ctrlBtn{position:fixed;bottom:16px;left:16px;z-index:400;width:36px;height:36px;
+  border-radius:50%;border:1px solid #333;background:rgba(0,0,0,.85);color:#888;
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-family:sans-serif}
+#ctrlBtn:hover{border-color:#e54d29;color:#e54d29}
+#ctrlBtn.active{border-color:#e54d29;color:#e54d29}
+#ctrlPanel{position:fixed;bottom:60px;left:16px;z-index:400;width:240px;
+  background:rgba(0,0,0,.92);border:1px solid #333;border-radius:6px;padding:14px;
+  display:none;flex-direction:column;gap:10px;font-family:"Dot Matrix V2",monospace}
+#ctrlPanel.open{display:flex}
+#ctrlPanel h4{font-size:9px;color:#888;letter-spacing:.2em;margin:0;
+  padding-bottom:6px;border-bottom:1px solid #333}
+.ctrl-row{display:flex;align-items:center;gap:8px}
+.ctrl-row label{font-size:8px;color:#888;letter-spacing:.1em;min-width:50px;text-transform:uppercase}
+.ctrl-row input[type=range]{flex:1;accent-color:#e54d29;height:4px;cursor:pointer}
+.ctrl-row .ctrl-val{font-size:8px;color:#e54d29;min-width:32px;text-align:right}
+#ctrlTabs{display:flex;gap:4px;margin-bottom:8px}
+.ctrl-tab{flex:1;padding:6px;background:none;border:1px solid #333;border-radius:3px;
+  color:#888;font-size:8px;letter-spacing:.2em;cursor:pointer;
+  font-family:"Dot Matrix V2",monospace;transition:all .2s;text-align:center}
+.ctrl-tab:hover{border-color:#e54d29;color:#e54d29}
+.ctrl-tab.active{border-color:#e54d29;color:#e54d29;background:rgba(229,77,41,.1)}
+.ctrl-section{display:flex;flex-direction:column;gap:8px}
+.ctrl-reset-btn{margin-top:4px;padding:5px;background:none;border:1px solid #333;
+  border-radius:3px;color:#888;font-size:8px;letter-spacing:.15em;cursor:pointer;
+  font-family:"Dot Matrix V2",monospace;transition:all .2s}
+.ctrl-reset-btn:hover{border-color:#e54d29;color:#e54d29}
+
+/* ── MOBILE ── */
+@media only screen and (max-width:768px){
+  main{margin-top:-80px}
+  #items{width:calc(100% - 40px);padding-bottom:40px;padding-top:40px;gap:15px}
+  #items a{width:100%}
+  .footer-links a{font-size:32px;display:block;margin:10px auto;text-align:center;width:100%;white-space:nowrap}
+}
+@media only screen and (max-width:600px){
+  #cart{right:32px !important;top:50px !important}
+}
+@media only screen and (min-width:600px){
+  #cart{right:75px;top:45px;height:30px;width:30px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="loading-logo">LUCKI VAULT</div>
+  <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+</div>
+
+<!-- ANNOUNCEMENT BAR -->
+<div class="announcement-bar">
+  <div class="scroll-text">
+    <span>𓊔 DRUGS R BAD 𓊔 </span>
+    <span> WELCOME 𓊔 </span>
+    <span style="padding:0 100px"></span>
+    <span>✉︎ SHIPPING STARTS MAY 12TH ✉︎ </span>
+    <span style="padding:0 100px"></span>
+    <span>⚕ DRUGS R BAD ⚕ </span>
+    <span> WELCOME ⚕ </span>
+    <span style="padding:0 100px"></span>
+    <span>✈︎ SHIPPING STARTS MAY 12TH ✈︎ </span>
+    <span style="padding:0 100px"></span>
+    <span>★ DRUGS R BAD ★ </span>
+    <span> WELCOME ★ </span>
+    <span style="padding:0 100px"></span>
+    <span>➤ SHIPPING STARTS MAY 12TH ➤ </span>
+    <span style="padding:0 100px"></span>
+    <span>✙ DRUGS R BAD ✙ </span>
+    <span> WELCOME ✙ </span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="top-header">
+  <div class="header-inner">
+    <div class="header-links">
+      <a href="/pages/shop" onclick="if(document.getElementById('modal').classList.contains('open')){event.preventDefault();closeModal();}">SHOP</a>
+      <a href="/pages/tour">TOUR</a>
+      <a href="/pages/music">VIDEOS</a>
+    </div>
+  </div>
+</div>
+
+<!-- CART -->
+<a href="/cart"><div id="cart"><img src="assets/cart.svg"></div></a>
+
+<!-- PRODUCTS -->
+<main>
+  <div id="items"></div>
+</main>
+
+<!-- RESKIN PANEL -->
+<div id="reskinPanel">
+  <h3>RESKIN <span id="reskinClose" style="cursor:pointer;color:#555;font-size:14px" onclick="toggleReskin()">×</span></h3>
+  <div id="reskinSlot">HOVER A CARD TO RESKIN IT</div>
+  <div id="reskinRows"></div>
+  <div id="texControls">
+    <h4 id="texLabel">TEXTURE</h4>
+    <div class="tex-row"><label>OFF X</label><input type="range" id="texOX" min="-1" max="1" value="0" step="0.01"><span class="tex-val" id="vTexOX">0</span></div>
+    <div class="tex-row"><label>OFF Y</label><input type="range" id="texOY" min="-1" max="1" value="0" step="0.01"><span class="tex-val" id="vTexOY">0</span></div>
+    <div class="tex-row"><label>SCL X</label><input type="range" id="texSX" min="0.1" max="4" value="1" step="0.01"><span class="tex-val" id="vTexSX">1</span></div>
+    <div class="tex-row"><label>SCL Y</label><input type="range" id="texSY" min="0.1" max="4" value="1" step="0.01"><span class="tex-val" id="vTexSY">1</span></div>
+    <div class="tex-row"><label>ROT</label><input type="range" id="texRot" min="-3.14" max="3.14" value="0" step="0.01"><span class="tex-val" id="vTexRot">0</span></div>
+    <button id="texReset" onclick="resetTexTransform()">RESET TEXTURE</button>
+  </div>
+  <div id="reskinPresets">
+    <h4>PRESETS</h4>
+    <div id="presetBtns"></div>
+    <div id="presetSaveRow">
+      <input id="presetInp" placeholder="preset name...">
+      <button id="presetSave">SAVE</button>
+    </div>
+    <button id="presetExportAll" style="margin-top:6px;padding:4px 8px;background:#e54d29;color:#fff;border:none;border-radius:2px;cursor:pointer;font-size:8px;letter-spacing:.1em;font-family:'Dot Matrix V2',monospace;width:100%">EXPORT ALL PRESETS</button>
+  </div>
+</div>
+<div id="reskinKey">` RESKIN</div>
+
+<!-- PRODUCT PAGE (MODAL) -->
+<div id="modal">
+  <div class="modal-inner">
+    <div class="modal-left">
+      <div class="modal-canvas-wrap">
+        <canvas id="modalCanvas"></canvas>
+      </div>
+      <button class="modal-vinyl-btn" onclick="toggleModalVinyl()">OPEN VINYL</button>
+    </div>
+    <div class="modal-right">
+      <div class="modal-title" id="modalName"></div>
+      <div class="modal-price" id="modalPrice"></div>
+      <button class="modal-add-btn" id="modalAddBtn" onclick="addToCart()">Add to cart</button>
+      <div class="modal-details" id="modalDetails"></div>
+      <div class="modal-support">Contact Support</div>
+    </div>
+  </div>
+</div>
+
+<!-- DROP BANNER -->
+<div class="drop-banner" id="dropBanner">
+  <div class="drop-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  </div>
+  <div class="drop-title">DROP GLB FILE</div>
+  <div class="drop-hint">vinyl_animation.glb &nbsp;or&nbsp; DRB CD ONE (Setup) - ANIMATION.glb</div>
+</div>
+
+<!-- MODEL CONTROLS -->
+<button id="ctrlBtn" onclick="toggleCtrl()" title="Model Controls">&#9881;</button>
+<div id="ctrlPanel">
+  <div id="ctrlTabs">
+    <button class="ctrl-tab active" data-tab="vinyl" onclick="switchTab('vinyl')">VINYL</button>
+    <button class="ctrl-tab" data-tab="cd" onclick="switchTab('cd')">CD</button>
+  </div>
+  <div class="ctrl-section" id="sec-vinyl">
+    <div class="ctrl-row"><label>FRAME W</label><input type="range" id="vinyl-fw" min="20" max="100" value="50" step="1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>FRAME H</label><input type="range" id="vinyl-fh" min="50" max="200" value="100" step="1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>ZOOM</label><input type="range" id="vinyl-zoom" min="10" max="80" value="39.6" step="0.5"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>MOVE X</label><input type="range" id="vinyl-mx" min="-5" max="5" value="0" step="0.1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>MOVE Y</label><input type="range" id="vinyl-my" min="-5" max="5" value="0" step="0.1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>SCALE</label><input type="range" id="vinyl-sc" min="50" max="200" value="100" step="1"><span class="ctrl-val"></span></div>
+    <div style="display:flex;gap:4px;margin-top:4px">
+      <button class="ctrl-reset-btn" style="flex:1" onclick="resetType('vinyl')">RESET</button>
+      <button class="ctrl-reset-btn" style="flex:1" onclick="exportType('vinyl')">EXPORT</button>
+    </div>
+  </div>
+  <div class="ctrl-section" id="sec-cd" style="display:none">
+    <div class="ctrl-row"><label>FRAME W</label><input type="range" id="cd-fw" min="20" max="100" value="50" step="1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>FRAME H</label><input type="range" id="cd-fh" min="50" max="200" value="100" step="1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>ZOOM</label><input type="range" id="cd-zoom" min="10" max="80" value="39.6" step="0.5"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>MOVE X</label><input type="range" id="cd-mx" min="-5" max="5" value="0" step="0.1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>MOVE Y</label><input type="range" id="cd-my" min="-5" max="5" value="0" step="0.1"><span class="ctrl-val"></span></div>
+    <div class="ctrl-row"><label>SCALE</label><input type="range" id="cd-sc" min="50" max="200" value="100" step="1"><span class="ctrl-val"></span></div>
+    <div style="display:flex;gap:4px;margin-top:4px">
+      <button class="ctrl-reset-btn" style="flex:1" onclick="resetType('cd')">RESET</button>
+      <button class="ctrl-reset-btn" style="flex:1" onclick="exportType('cd')">EXPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-links">
+      <a href="/pages/privacy-policy">Privacy Policy</a>
+      <a href="/pages/contact">Contact</a>
+      <a href="/pages/cookies">Cookies</a>
+      <a href="/pages/personal-information">Personal Information</a>
+      <a href="/pages/shipping-return-policy">Shipping & Return Policy</a>
+    </div>
+    <div class="footer-copyright">
+      <a href="/pages/shop">© 2026 LUCKI | Shop</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ── PRODUCTS ──────────────────────────────────────────────────────────────
+const PRODUCTS = [
+  {name:"Dr*gs R Bad - Signed Escape Vinyl",   price:"$60.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-signed-vinyl-escape",    variantId:"48602867630309", variant:"SIGNED ESCAPE VINYL"},
+  {name:"Dr*gs R Bad - Escape Vinyl",          price:"$40.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-escape-variant",      variantId:"48599340220645", variant:"ESCAPE VINYL"},
+  {name:"Dr*gs R Bad - Signed Meltdown Vinyl", price:"$60.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-signed-vinyl-meltdown",variantId:"48603031765221", variant:"SIGNED MELTDOWN VINYL"},
+  {name:"Dr*gs R Bad - Meltdown Vinyl",        price:"$40.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-meltdown-vinyl",      variantId:"48603026489573", variant:"MELTDOWN VINYL"},
+  {name:"Dr*gs R Bad - Signed Overdose Vinyl", price:"$60.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-signed-vinyl-overdose",variantId:"48603040055525", variant:"SIGNED OVERDOSE VINYL"},
+  {name:"Dr*gs R Bad - Overdose Vinyl",        price:"$40.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-overdose-vinyl",      variantId:"48603034484965", variant:"OVERDOSE VINYL"},
+  {name:"Dr*gs R Bad Black Vinyl",             price:"$40.00", type:"vinyl", url:"https://www.luckivault.com/products/black-vinyl",                     variantId:"48582442778853", variant:"BLACK VINYL"},
+  {name:"Dr*gs R Bad CD",                      price:"$12.00", type:"cd",    url:"https://www.luckivault.com/products/cd",                              variantId:"48582452412645"},
+  {name:"Dr*gs R Bad - Signed Orange Vinyl",   price:"$50.00", type:"vinyl", url:"https://www.luckivault.com/products/signed-orange-vinyl",             variantId:"48583372603621", variant:"SIGNED ORANGE VINYL", soldout:true},
+  {name:"Dr*gs R Bad Orange Vinyl",            price:"$40.00", type:"vinyl", url:"https://www.luckivault.com/products/orange-vinyl",                    variantId:"48582443303141", soldout:true},
+];
+
+// ── VARIANT TEXTURE MAPS ─────────────────────────────────────────────────
+// Keys = mesh or material name from GLB, Values = image path relative to this HTML file
+const SLV = 'VINYL SLEEVES/';
+const COV = 'COVERS (FONT AND BACK)/';
+
+const VARIANT_TEXTURES = {
+  "ESCAPE VINYL": {
+    "Front.003": SLV+"SLEEVE 5.png",
+    "Back.003":  SLV+"SLEEVE 6.png",
+    "Front.001": SLV+"SLEEVE 7.png",
+    "Back.001":  SLV+"SLEEVE 8.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - white.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - white.png",
+    "Front.002": COV+"ESCAPE FRONT MAIN UNSIGNED COVER.png",
+    "Back.002":  COV+"ESCAPE BACK MAIN COVER.png"
+  },
+  "SIGNED ESCAPE VINYL": {
+    "Front.003": SLV+"SLEEVE 5.png",
+    "Back.003":  SLV+"SLEEVE 6.png",
+    "Front.001": SLV+"SLEEVE 7.png",
+    "Back.001":  SLV+"SLEEVE 8.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - white.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - white.png",
+    "Front.002": COV+"ESCAPE FRONT MAIN SIGNED COVER.png",
+    "Back.002":  COV+"ESCAPE BACK MAIN COVER.png"
+  },
+  "MELTDOWN VINYL": {
+    "Front.003": SLV+"SLEEVE 1.png",
+    "Back.003":  SLV+"SLEEVE 2.png",
+    "Front.001": SLV+"SLEEVE 7.png",
+    "Back.001":  SLV+"SLEEVE 8.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - brown.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - brown.png",
+    "Front.002": COV+"MELTDOWN FRONT MAIN UNSIGNED COVER.png",
+    "Back.002":  COV+"MELTDOWN BACK MAIN COVER.png"
+  },
+  "SIGNED MELTDOWN VINYL": {
+    "Front.003": SLV+"SLEEVE 1.png",
+    "Back.003":  SLV+"SLEEVE 2.png",
+    "Front.001": SLV+"SLEEVE 7.png",
+    "Back.001":  SLV+"SLEEVE 8.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - brown.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - brown.png",
+    "Front.002": COV+"MELTDOWN FRONT MAIN SIGNED COVER.png",
+    "Back.002":  COV+"MELTDOWN BACK MAIN COVER.png"
+  },
+  "OVERDOSE VINYL": {
+    "Front.003": SLV+"SLEEVE 5.png",
+    "Back.003":  SLV+"SLEEVE 6.png",
+    "Front.001": SLV+"SLEEVE 4.png",
+    "Back.001":  SLV+"SLEEVE 3.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - grey.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - grey.png",
+    "Front.002": COV+"OVERDOSE FRONT MAIN UNSIGNED COVER.png",
+    "Back.002":  COV+"OVERDOSE BACK MAIN COVER.png"
+  },
+  "SIGNED OVERDOSE VINYL": {
+    "Front.003": SLV+"SLEEVE 5.png",
+    "Back.003":  SLV+"SLEEVE 6.png",
+    "Front.001": SLV+"SLEEVE 4.png",
+    "Back.001":  SLV+"SLEEVE 3.png",
+    "#REC0002_Textures.002": SLV+"Face-Disc - grey.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - grey.png",
+    "Front.002": COV+"OVERDOSE FRONT MAIN SIGNED COVER.png",
+    "Back.002":  COV+"OVERDOSE BACK MAIN COVER.png"
+  },
+  "BLACK VINYL": {
+    "#REC0002_Textures.002": SLV+"Face-Disc - black.png",
+    "#REC0002_Textures.004": SLV+"star-Disc - black.png"
+  },
+  "SIGNED ORANGE VINYL": {
+    "Front.002": COV+"DRB MAIN COVER/MAIN COVER FRONT SIGNED.png"
+  }
+};
+
+// ── GLB CACHE ─────────────────────────────────────────────────────────────
+let vinylGLB = null, cdGLB = null;
+const cardScenes = [];
+
+// ── THREE.JS CARD SCENE ──────────────────────────────────────────────────
+function makeCardScene(canvas, type) {
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(1);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.physicallyCorrectLights = true;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+
+  const cfg = type === 'cd'
+    ? {pos:[-0.181,6.922,4.511], tgt:[-0.15,6.83,-0.15], fov:39.6}
+    : {pos:[-0.8027,6.728,8.101], tgt:[-1.561,6.708,-1.831], fov:39.6};
+
+  const camera = new THREE.PerspectiveCamera(cfg.fov, 1, 0.1, 1000);
+  camera.position.set(...cfg.pos);
+  camera.lookAt(...cfg.tgt);
+
+  const kl = new THREE.RectAreaLight(0xffffff, 6, 6.28, 6.28);
+  kl.position.set(-0.20,2.90,1.60);
+  kl.lookAt(new THREE.Vector3(...cfg.tgt));
+  scene.add(kl);
+  [[-0.20,6.50,-3.70,60],[-5.53,10.60,5.63,1.2],[-3.95,8.27,-2.27,1.6],
+   [-3.55,2.64,4.38,1.6],[-5.90,8.22,1.31,3.0],[4.79,9.12,-3.40,.25],
+   [3.91,5.76,-1.48,.08],[7.20,15.82,-1.12,.8]
+  ].forEach(([x,y,z,i])=>{const l=new THREE.PointLight(0xffffff,i,25,2);l.position.set(x,y,z);scene.add(l);});
+  scene.add(new THREE.AmbientLight(0xffffff,0.3));
+
+  return {renderer, scene, camera, type, cfg, loaded:false, nodes:{}, trackMap:[],
+    tiltX:0, tiltY:0, tiltTargetX:0, tiltTargetY:0, flipped:false, flipProgress:0,
+    visible:true, dirty:true};
+}
+
+// ── ANIMATION HELPERS ──────────────────────────────────────────────────────
+const VINYL_BACK = new Set(['L_Vinyl001','R_Vinyl','Middle_Vinyl001','R_Middle_Vinyl']);
+const VINYL_LABELS = {'Middle_Vinyl001':'L_Vinyl001','R_Middle_Vinyl':'R_Vinyl'};
+const T_VINYL = {s:8.3333, e:10.8333};
+const T_CD    = {s:0.5, e:1.8333};
+
+function lerp3(a,b,t){return a.map((v,i)=>v+(b[i]-v)*t);}
+function slerpQ(a,b,t){const q=new THREE.Quaternion(a[0],a[1],a[2],a[3]);q.slerp(new THREE.Quaternion(b[0],b[1],b[2],b[3]),t);return[q.x,q.y,q.z,q.w];}
+function sampleT(track,t,rest){
+  const ti=track.times,va=track.values,st=va.length/ti.length;
+  if(t<ti[0])return rest;if(t>=ti[ti.length-1])return Array.from(va.slice(-st));
+  let lo=0;while(lo<ti.length-1&&ti[lo+1]<=t)lo++;
+  const a=(t-ti[lo])/(ti[lo+1]-ti[lo]);
+  const v0=Array.from(va.slice(lo*st,(lo+1)*st));const v1=Array.from(va.slice((lo+1)*st,(lo+2)*st));
+  return st===4?slerpQ(v0,v1,a):lerp3(v0,v1,a);
+}
+
+function buildMap(clips, root, nodes, trackMap){
+  root.traverse(n=>{if(n.name)nodes[n.name]=n;});
+  clips.forEach(clip=>{clip.tracks.forEach(track=>{
+    const dot=track.name.lastIndexOf('.');const name=track.name.slice(0,dot);const prop=track.name.slice(dot+1);
+    const node=nodes[name]||nodes[name.replace(/ /g,'_').replace(/\./g,'')];if(!node)return;
+    let e=trackMap.find(x=>x.node===node);if(!e){e={node};trackMap.push(e);}
+    if(prop==='position')e.pos=track;if(prop==='quaternion')e.rot=track;if(prop==='scale')e.scl=track;
+  });});
+  trackMap.forEach(e=>{
+    e.rP=[e.node.position.x,e.node.position.y,e.node.position.z];
+    e.rR=[e.node.quaternion.x,e.node.quaternion.y,e.node.quaternion.z,e.node.quaternion.w];
+    e.rS=[e.node.scale.x,e.node.scale.y,e.node.scale.z];
+  });
+}
+
+function applyMap(trackMap, nodes, t, labels){
+  trackMap.forEach(({node,pos,rot,scl,rP,rR,rS})=>{
+    if(pos){const v=sampleT(pos,t,rP);node.position.set(v[0],v[1],v[2]);}
+    if(rot){const v=sampleT(rot,t,rR);node.quaternion.set(v[0],v[1],v[2],v[3]);}
+    if(scl){const v=sampleT(scl,t,rS);node.scale.set(v[0],v[1],v[2]);}
+  });
+  if(labels) Object.entries(labels).forEach(([l,d])=>{const ln=nodes[l],dn=nodes[d];if(ln&&dn){ln.position.copy(dn.position);ln.quaternion.copy(dn.quaternion);}});
+}
+
+function fixMaterials(gltfScene, type){
+  gltfScene.traverse(n=>{
+    if(!n.isMesh)return;
+    const mats=Array.isArray(n.material)?n.material:[n.material];
+    mats.forEach(mat=>{
+      if(type==='vinyl'&&VINYL_BACK.has(n.name)){mat.side=THREE.BackSide;mat.transparent=false;mat.opacity=1;mat.depthWrite=true;}
+      if(mat.name==='Material.070'||mat.name==='Frosted transparent glass'||mat.name==='Glass.005'){mat.transparent=true;mat.opacity=0.25;mat.depthWrite=false;}
+      if(mat.roughnessMap)mat.roughnessMap.encoding=THREE.LinearEncoding;
+      if(mat.normalMap){mat.normalMap.encoding=THREE.LinearEncoding;mat.normalScale.set(1,-1);}
+      if(mat.aoMap)mat.aoMap.encoding=THREE.LinearEncoding;
+      mat.needsUpdate=true;
+    });
+  });
+}
+
+// ── TEXTURE CACHE ── same image loads once, shared across cards ──────────
+const _texCache={};
+const _sharedLoader=new THREE.TextureLoader();
+function loadCached(url,cb){
+  if(_texCache[url]){cb(_texCache[url].clone());return;}
+  _sharedLoader.load(url,tex=>{_texCache[url]=tex;cb(tex.clone());},undefined,()=>console.warn('Texture not found:',url));
+}
+
+// Preload every variant texture up front so the cache is warm by the time
+// GLBs finish parsing. Eliminates the default→variant texture flash.
+(function preloadVariantTextures(){
+  const urls = new Set();
+  PRODUCTS.forEach(p => {
+    const tm = p.variant && VARIANT_TEXTURES[p.variant];
+    if(tm) Object.values(tm).forEach(u => urls.add(u));
+  });
+  urls.forEach(u => loadCached(u, ()=>{}));
+})();
+
+function applyVariantTextures(sceneRoot, productIdx){
+  const prod = PRODUCTS[productIdx];
+  if(!prod || !prod.variant || !VARIANT_TEXTURES[prod.variant]) return;
+  const texMap = VARIANT_TEXTURES[prod.variant];
+  const applied = new Set();
+  const sc = cardScenes[productIdx];
+  sceneRoot.traverse(n=>{
+    if(!n.isMesh) return;
+    const mats = Array.isArray(n.material) ? n.material : [n.material];
+    mats.forEach(mat=>{
+      if(!mat.map) return;
+      const key = texMap[n.name] ? n.name : (texMap[mat.name] ? mat.name : null);
+      if(!key || applied.has(key)) return;
+      applied.add(key);
+      const origFlipY = mat.map.flipY;
+      const origWrapS = mat.map.wrapS;
+      const origWrapT = mat.map.wrapT;
+      loadCached(texMap[key], tex=>{
+        tex.encoding = THREE.sRGBEncoding;
+        tex.flipY = origFlipY;
+        tex.wrapS = origWrapS;
+        tex.wrapT = origWrapT;
+        tex.needsUpdate = true;
+        mat.map = tex;
+        mat.needsUpdate = true;
+        if(sc) sc.dirty=true;
+      });
+    });
+  });
+}
+
+function loadIntoScene(sc, buf, type, onReady) {
+  new THREE.GLTFLoader().parse(buf,'',gltf=>{
+    const clone = gltf.scene.clone(true);
+    fixMaterials(clone, type);
+    sc.scene.add(clone);
+    const t = type==='cd' ? T_CD : T_VINYL;
+    if(gltf.animations&&gltf.animations.length){
+      buildMap(gltf.animations, clone, sc.nodes, sc.trackMap);
+      applyMap(sc.trackMap, sc.nodes, t.s, type==='vinyl'?VINYL_LABELS:null);
+    }
+    sc.tStart = t.s; sc.tEnd = t.e; sc.current = t.s;
+    sc.playing = false; sc.playDir = 1; sc.isOpen = false;
+    if(sc.productIdx !== undefined) applyVariantTextures(clone, sc.productIdx);
+    if(typeof onReady === 'function') onReady(sc);
+    sc.loaded = true; sc.dirty = true;
+  });
+}
+
+// One-shot: fit camera so model fills canvas. Call from onReady so it's baked in before first render.
+function fitCameraToModel(sc, padding){
+  padding = padding || 1.15;
+  if(!sc || !sc._controls || !sc.camera) return;
+  const box = new THREE.Box3().setFromObject(sc.scene);
+  if(box.isEmpty()) return;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const vfov = sc.camera.fov * Math.PI / 180;
+  const aspect = sc.camera.aspect || 1;
+  const hfov = 2 * Math.atan(Math.tan(vfov/2) * aspect);
+  const distV = (size.y/2) / Math.tan(vfov/2);
+  const distH = (size.x/2) / Math.tan(hfov/2);
+  const fitDist = Math.max(distV, distH, 0.01) * padding;
+  const ctl = sc._controls;
+  const offset = new THREE.Vector3().subVectors(sc.camera.position, ctl.target);
+  if(offset.lengthSq() < 0.0001) offset.set(0, 0, 1);
+  offset.normalize();
+  ctl.minDistance = Math.min(ctl.minDistance, fitDist * 0.3);
+  ctl.maxDistance = Math.max(ctl.maxDistance, fitDist * 3);
+  ctl.target.copy(center);
+  sc.camera.position.copy(center).addScaledVector(offset, fitDist);
+  ctl.update();
+}
+
+// ── BUILD GRID ─────────────────────────────────────────────────────────────
+const grid = document.getElementById('items');
+
+PRODUCTS.forEach((prod, idx) => {
+  const card = document.createElement('a');
+  card.href = prod.soldout ? '#' : prod.url;
+  if(prod.soldout) card.classList.add('soldout');
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'card-canvas';
+  card.appendChild(canvas);
+
+  // Title overlay — clicks open product page
+  const title = document.createElement('span');
+  title.className = 'item-title';
+  title.textContent = prod.name;
+  title.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    openModal(idx);
+  });
+  card.appendChild(title);
+
+  // Price overlay — clicks open product page
+  const price = document.createElement('span');
+  price.className = 'item-price';
+  price.textContent = prod.price;
+  price.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    openModal(idx);
+  });
+  card.appendChild(price);
+
+  // Flip button
+  const flipBtn=document.createElement('span');
+  flipBtn.className='flip-btn';
+  flipBtn.textContent='↻';
+  flipBtn.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    const sc=cardScenes[idx];
+    if(sc&&sc.loaded)sc.flipped=!sc.flipped;
+  });
+  card.appendChild(flipBtn);
+
+  // Click on canvas → toggle 3D animation
+  canvas.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    if(prod.soldout){
+      card.classList.add('shaking');
+      setTimeout(()=>card.classList.remove('shaking'), 700);
+      return;
+    }
+    const sc=cardScenes[idx];
+    if(sc && sc.loaded){
+      if(sc.isOpen||(sc.playDir===1&&sc.playing)){sc.playDir=-1;sc.playing=true;}
+      else{sc.playDir=1;sc.playing=true;}
+    }
+  });
+
+  // Block default link behavior on card
+  card.addEventListener('click', e => {
+    e.preventDefault();
+  });
+
+  grid.appendChild(card);
+
+  // Init Three.js scene
+  const sc = makeCardScene(canvas, prod.type);
+  sc.productIdx = idx;
+  cardScenes.push(sc);
+
+  new ResizeObserver(()=>{
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    if(w && h){
+      sc.renderer.setSize(w,h,false);
+      sc.camera.aspect=w/h;
+      sc.camera.updateProjectionMatrix();
+      sc.dirty=true;
+    }
+  }).observe(canvas);
+});
+
+// ── VISIBILITY OBSERVER ── skip off-screen cards ─────────────────────────
+const visObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    const idx=[...grid.children].indexOf(entry.target);
+    if(idx!==-1 && cardScenes[idx]){
+      cardScenes[idx].visible=entry.isIntersecting;
+      if(entry.isIntersecting) cardScenes[idx].dirty=true;
+    }
+  });
+},{threshold:0.01});
+[...grid.children].forEach(card=>visObserver.observe(card));
+
+// ── LOAD GLBs ──────────────────────────────────────────────────────────────
+function loadGLBBuffer(type, buffer) {
+  cardScenes.forEach(sc => {
+    if(PRODUCTS[sc.productIdx].type === type) {
+      loadIntoScene(sc, buffer.slice(0), type);
+    }
+  });
+  if(type==='vinyl') vinylGLB = buffer;
+  if(type==='cd') cdGLB = buffer;
+}
+
+function loadGLBFile(type, file) {
+  const reader = new FileReader();
+  reader.onload = ev => loadGLBBuffer(type, ev.target.result);
+  reader.readAsArrayBuffer(file);
+}
+
+// Auto-load GLBs from same directory
+(function autoLoadGLBs() {
+  const fill = document.getElementById('loadingFill');
+  let loaded = 0;
+  function oneDone() {
+    loaded++;
+    fill.style.width = (loaded/2*100)+'%';
+    if(loaded >= 2) setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'), 400);
+  }
+  fetch('vinyl_animation.glb')
+    .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+    .then(buf=>{loadGLBBuffer('vinyl',buf);oneDone()}).catch(oneDone);
+  fetch('DRB CD ONE (Setup) - ANIMATION.glb')
+    .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+    .then(buf=>{loadGLBBuffer('cd',buf);oneDone()}).catch(oneDone);
+})();
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────
+const dropBanner = document.getElementById('dropBanner');
+let dragCount=0;
+document.addEventListener('dragenter',()=>{dragCount++;dropBanner.classList.add('visible');});
+document.addEventListener('dragleave',()=>{dragCount--;if(dragCount<=0){dragCount=0;dropBanner.classList.remove('visible');}});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{
+  e.preventDefault();dragCount=0;dropBanner.classList.remove('visible');
+  const f=e.dataTransfer.files[0];
+  if(!f||!f.name.match(/\.glb$/i))return;
+  loadGLBFile(f.name.toLowerCase().includes('cd')?'cd':'vinyl', f);
+});
+
+// ── RESKIN PANEL ──────────────────────────────────────────────────────────
+let reskinOpen=false, activeCardIdx=null, reskinTargets=[], reskinPresets={}, activePreset=null, selReskinIdx=null;
+
+// ── IndexedDB for preset storage (no size limit) ──
+const IDB_NAME='luckivault_reskin',IDB_STORE='presets';
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(IDB_STORE);
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  });
+}
+function idbPut(key,val){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(val,key);
+    tx.oncomplete=()=>{db.close();res();};
+    tx.onerror=()=>{db.close();rej(tx.error);};
+  }));
+}
+function idbGet(key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const req=tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess=()=>{db.close();res(req.result);};
+    req.onerror=()=>{db.close();rej(req.error);};
+  }));
+}
+
+document.getElementById('presetExportAll').addEventListener('click',()=>{
+  var keys=Object.keys(reskinPresets);
+  alert('Presets in memory: '+keys.length+(keys.length?' — '+keys.join(', '):''));
+  if(!keys.length)return;
+  var json=JSON.stringify(reskinPresets);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.style.display='none';a.href=url;a.download='luckivault_presets.json';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+});
+
+function savePresetsToStorage(){
+  idbPut('allPresets',reskinPresets).catch(e=>console.warn('Preset save failed',e));
+}
+// Load presets on startup
+idbGet('allPresets').then(d=>{
+  if(d&&typeof d==='object'){reskinPresets=d;refreshPresetBtns();}
+}).catch(()=>{});
+
+function toggleReskin(){
+  reskinOpen=!reskinOpen;
+  const panel=document.getElementById('reskinPanel');
+  panel.style.display='flex';
+  requestAnimationFrame(()=>panel.classList.toggle('open',reskinOpen));
+  document.getElementById('reskinKey').style.color=reskinOpen?'#e54d29':'#ccc';
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='`')toggleReskin();
+  if(e.key==='Escape'&&document.getElementById('modal').classList.contains('open'))closeModal();
+});
+
+cardScenes.forEach((sc,i)=>{
+  grid.children[i].addEventListener('mouseenter',()=>{
+    if(!reskinOpen||!sc.loaded)return;
+    activeCardIdx=i;buildReskinRows(sc);
+    document.getElementById('reskinSlot').textContent=PRODUCTS[i].name;
+    document.getElementById('reskinSlot').style.color='#aaa';
+  });
+});
+
+function buildReskinRows(sc){
+  const rows=document.getElementById('reskinRows');rows.innerHTML='';
+  reskinTargets=[];selReskinIdx=null;const seen=new Set();
+  sc.scene.traverse(n=>{
+    if(!n.isMesh)return;
+    (Array.isArray(n.material)?n.material:[n.material]).forEach(mat=>{
+      if(mat.map&&!seen.has(mat.uuid)){seen.add(mat.uuid);reskinTargets.push({mat,label:mat.name||n.name,dataURL:mat._reskinDataURL||null});}
+    });
+  });
+  reskinTargets.forEach((t,i)=>{
+    const row=document.createElement('div');row.className='rsk';row.id='rrow'+i;
+    const hasSwap=!!t.dataURL;
+    const name=document.createElement('span');name.className='rsk-name';name.textContent=t.label;name.title=t.label;
+    if(hasSwap)name.style.color='#e54d29';
+    name.onclick=()=>{document.querySelectorAll('.rsk-name').forEach(s=>s.classList.remove('rsel'));name.classList.add('rsel');selReskinIdx=i;};
+    const btn=document.createElement('button');btn.className='rsk-btn'+(hasSwap?' rdone':'');btn.textContent=hasSwap?'SWAP':'UPLOAD';
+    const inp=document.createElement('input');inp.type='file';inp.className='rsk-file';inp.accept='image/*';
+    btn.onclick=()=>inp.click();
+    inp.addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=e2=>applyReskin(t,i,e2.target.result);rd.readAsDataURL(f);});
+    row.append(name,btn,inp);rows.appendChild(row);
+  });
+  refreshPresetBtns();
+}
+
+function applyReskin(target,idx,dataURL){
+  const img=new Image();
+  img.onload=()=>{
+    const tex=new THREE.Texture(img);tex.encoding=THREE.sRGBEncoding;
+    tex.flipY=target.mat.map?.flipY??true;tex.wrapS=target.mat.map?.wrapS??THREE.RepeatWrapping;
+    tex.wrapT=target.mat.map?.wrapT??THREE.RepeatWrapping;tex.needsUpdate=true;
+    target.mat.map=tex;target.mat.needsUpdate=true;target.dataURL=dataURL;target.mat._reskinDataURL=dataURL;
+    const row=document.getElementById('rrow'+idx);
+    if(row){row.querySelector('.rsk-name').style.color='#e54d29';const b=row.querySelector('.rsk-btn');b.textContent='SWAP';b.classList.add('rdone');}
+    activePreset=null;refreshPresetBtns();
+  };img.src=dataURL;
+}
+
+// ── TEXTURE TRANSFORM CONTROLS ──────────────────────────────────────────
+const texSliders={ox:document.getElementById('texOX'),oy:document.getElementById('texOY'),
+  sx:document.getElementById('texSX'),sy:document.getElementById('texSY'),rot:document.getElementById('texRot')};
+const texVals={ox:document.getElementById('vTexOX'),oy:document.getElementById('vTexOY'),
+  sx:document.getElementById('vTexSX'),sy:document.getElementById('vTexSY'),rot:document.getElementById('vTexRot')};
+
+function showTexControls(idx){
+  const t=reskinTargets[idx];if(!t||!t.mat.map)return;
+  const tc=document.getElementById('texControls');tc.classList.add('open');
+  document.getElementById('texLabel').textContent=t.label;
+  // Load current transform from material's stored values or defaults
+  const tr=t.mat._texTransform||{ox:0,oy:0,sx:1,sy:1,rot:0};
+  texSliders.ox.value=tr.ox; texSliders.oy.value=tr.oy;
+  texSliders.sx.value=tr.sx; texSliders.sy.value=tr.sy;
+  texSliders.rot.value=tr.rot;
+  updateTexLabels();
+}
+
+function updateTexLabels(){
+  texVals.ox.textContent=parseFloat(texSliders.ox.value).toFixed(2);
+  texVals.oy.textContent=parseFloat(texSliders.oy.value).toFixed(2);
+  texVals.sx.textContent=parseFloat(texSliders.sx.value).toFixed(2);
+  texVals.sy.textContent=parseFloat(texSliders.sy.value).toFixed(2);
+  texVals.rot.textContent=parseFloat(texSliders.rot.value).toFixed(2);
+}
+
+function applyTexTransform(){
+  if(selReskinIdx===null)return;
+  const t=reskinTargets[selReskinIdx];if(!t||!t.mat.map)return;
+  const ox=parseFloat(texSliders.ox.value),oy=parseFloat(texSliders.oy.value);
+  const sx=parseFloat(texSliders.sx.value),sy=parseFloat(texSliders.sy.value);
+  const rot=parseFloat(texSliders.rot.value);
+  t.mat.map.offset.set(ox,oy);
+  t.mat.map.repeat.set(sx,sy);
+  t.mat.map.rotation=rot;
+  t.mat.map.center.set(0.5,0.5);
+  t.mat.map.needsUpdate=true;
+  t.mat._texTransform={ox,oy,sx,sy,rot};
+  updateTexLabels();
+}
+
+function resetTexTransform(){
+  texSliders.ox.value=0;texSliders.oy.value=0;
+  texSliders.sx.value=1;texSliders.sy.value=1;texSliders.rot.value=0;
+  applyTexTransform();
+}
+
+Object.values(texSliders).forEach(s=>s.addEventListener('input',applyTexTransform));
+
+// Update buildReskinRows name click to also show tex controls
+const _origBuildReskinRows=buildReskinRows;
+buildReskinRows=function(sc){
+  _origBuildReskinRows(sc);
+  // Re-wire name clicks to also open tex controls
+  reskinTargets.forEach((t,i)=>{
+    const row=document.getElementById('rrow'+i);
+    if(!row)return;
+    const name=row.querySelector('.rsk-name');
+    const origClick=name.onclick;
+    name.onclick=()=>{origClick();showTexControls(i);};
+  });
+  document.getElementById('texControls').classList.remove('open');
+};
+
+document.getElementById('presetSave').addEventListener('click',()=>{
+  const name=document.getElementById('presetInp').value.trim();if(!name)return;
+  const snap=reskinTargets.filter(t=>t.dataURL).map(t=>({i:reskinTargets.indexOf(t),dataURL:t.dataURL,tex:t.mat._texTransform||null}));
+  if(!snap.length){alert('Upload at least one texture first');return;}
+  reskinPresets[name]=snap;activePreset=name;document.getElementById('presetInp').value='';refreshPresetBtns();savePresetsToStorage();
+});
+
+function refreshPresetBtns(){
+  const bar=document.getElementById('presetBtns');bar.innerHTML='';
+  Object.keys(reskinPresets).forEach(name=>{
+    const btn=document.createElement('button');btn.className='pbtn'+(activePreset===name?' pact':'');btn.textContent=name;
+    btn.onclick=()=>{reskinPresets[name].forEach(({i,dataURL,tex})=>{
+      if(reskinTargets[i]){applyReskin(reskinTargets[i],i,dataURL);
+        if(tex&&reskinTargets[i].mat.map){reskinTargets[i].mat._texTransform=tex;
+          reskinTargets[i].mat.map.offset.set(tex.ox,tex.oy);reskinTargets[i].mat.map.repeat.set(tex.sx,tex.sy);
+          reskinTargets[i].mat.map.rotation=tex.rot;reskinTargets[i].mat.map.center.set(0.5,0.5);reskinTargets[i].mat.map.needsUpdate=true;}}
+    });activePreset=name;refreshPresetBtns();};
+    btn.oncontextmenu=e=>{e.preventDefault();if(confirm('Delete "'+name+'"?')){delete reskinPresets[name];if(activePreset===name)activePreset=null;refreshPresetBtns();savePresetsToStorage();}};
+    bar.appendChild(btn);
+  });
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+// ── PRODUCT DETAILS DATA ────────────────────────────────────────────────────
+const PRODUCT_DETAILS={
+  "SIGNED ESCAPE VINYL":['SIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Escape / Clear White Vinyl'],
+  "ESCAPE VINYL":['UNSIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Escape / Clear White Vinyl'],
+  "SIGNED MELTDOWN VINYL":['SIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Meltdown / Tiger Eye Brown'],
+  "MELTDOWN VINYL":['UNSIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Meltdown / Tiger Eye Brown'],
+  "SIGNED OVERDOSE VINYL":['SIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Overdose / Smoke Grey Swirl Vinyl'],
+  "OVERDOSE VINYL":['UNSIGNED','Alternative Front and Back Art, 2xLP, Widespine Jacket with Printed Inner Sleeves','Overdose / Smoke Grey Swirl Vinyl'],
+  "BLACK VINYL":['2xLP, Widespine Jacket with Printed Inner Sleeves','Solid Black Vinyl'],
+  "SIGNED ORANGE VINYL":['SIGNED','2xLP, Widespine Jacket with Printed Inner Sleeves','Transparent Orange Vinyl'],
+  "cd":['Jewel Case CD, Panel Insert','Standard Disk']
+};
+
+const modalCanvas=document.getElementById('modalCanvas');
+let modalSC=null;
+let modalRenderer=null;
+let modalProductIdx=null;
+
+function openModal(idx){
+  const prod=PRODUCTS[idx];
+  modalProductIdx=idx;
+  document.getElementById('modalName').textContent=prod.name;
+  document.getElementById('modalPrice').textContent=prod.price;
+
+  // Build product details
+  const detailsEl=document.getElementById('modalDetails');
+  const key=prod.variant||prod.type;
+  const features=PRODUCT_DETAILS[key]||[];
+  let html='<ul class="modal-features">';
+  features.forEach(f=>html+='<li>'+f+'</li>');
+  html+='</ul>';
+  html+='<p class="modal-preorder"><strong>Note:</strong> This is a PRE-ORDER item. By purchasing, you secure your copy ahead of the official release. Please note that vinyl production is currently underway. Shipping is scheduled to begin on May 12th.</p>';
+  detailsEl.innerHTML=html;
+
+  // Reset add button
+  const btn=document.getElementById('modalAddBtn');
+  btn.textContent=prod.soldout?'Sold Out':'Add to cart';
+  btn.disabled=!!prod.soldout;
+  btn.className='modal-add-btn'+(prod.soldout?' adding':'');
+
+  const modal=document.getElementById('modal');
+  modal.style.display='block';modal.scrollTop=0;
+  requestAnimationFrame(()=>modal.classList.add('open'));
+
+  // Dispose old scene but reuse renderer
+  if(modalSC){modalSC.scene.traverse(n=>{if(n.isMesh){n.geometry.dispose();const m=Array.isArray(n.material)?n.material:[n.material];m.forEach(mt=>{if(mt.map)mt.map.dispose();mt.dispose();});}});modalSC.scene.clear();}
+  if(!modalRenderer){
+    modalRenderer=new THREE.WebGLRenderer({canvas:modalCanvas,antialias:true,alpha:true});
+    modalRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    modalRenderer.outputEncoding=THREE.sRGBEncoding;
+    modalRenderer.toneMapping=THREE.NoToneMapping;
+    modalRenderer.physicallyCorrectLights=true;
+  }
+  modalSC=makeCardScene(modalCanvas,prod.type);
+  modalSC.renderer=modalRenderer;
+  modalSC.productIdx=idx;
+  modalSC.playing=false;
+  const w=modalCanvas.clientWidth,h=modalCanvas.clientHeight;
+  modalSC.renderer.setSize(w,h,false);modalSC.camera.aspect=w/h;modalSC.camera.updateProjectionMatrix();
+
+  // Orbit controls for modal — lets user spin/zoom the model
+  if(modalSC._controls)modalSC._controls.dispose();
+  const controls=new THREE.OrbitControls(modalSC.camera,modalCanvas);
+  controls.enableDamping=true;controls.dampingFactor=0.08;
+  controls.enablePan=false;controls.minDistance=3;controls.maxDistance=20;
+  controls.target.set(...modalSC.cfg.tgt);controls.update();
+  modalSC._controls=controls;
+  modalSC.dirty=true;
+
+  const buf=prod.type==='cd'?cdGLB:vinylGLB;
+  if(buf)loadIntoScene(modalSC,buf.slice(0),prod.type,fitCameraToModel);
+
+  // OPEN VINYL button: hide for CD (no sleeve) and on mobile (canvas is square via CSS, Layout 2 wide-aspect breaks layout)
+  const vinylBtn=document.querySelector('.modal-vinyl-btn');
+  if(vinylBtn){
+    const hideBtn=(prod.type==='cd')||(window.innerWidth<=768);
+    vinylBtn.style.display=hideBtn?'none':'';
+    vinylBtn.textContent='OPEN VINYL';
+  }
+
+  // Start in Layout 1 (closed state) — apply immediately without transition
+  setTimeout(()=>{if(window._pptunerApplyLayout){
+    // Apply L1 instantly (no animation on initial load)
+    const transEls2='.modal-inner,.modal-left,.modal-right,.modal-title,.modal-price,.modal-add-btn,.modal-details,.modal-canvas-wrap,#modalCanvas,.modal-features li,.modal-preorder,.modal-support';
+    document.querySelectorAll(transEls2).forEach(el=>{el.style.transition='none';});
+    window._pptunerApplyLayout(1);
+    document.querySelectorAll(transEls2).forEach(el=>{el.style.transition='';});
+  }},100);
+}
+
+// Modal vinyl toggle — simple button, no event conflicts
+function toggleModalVinyl(){
+  if(!modalSC||!modalSC.loaded||modalSC.playing)return;
+  if(modalSC.isOpen){
+    modalSC.playDir=-1;modalSC.playing=true;
+    if(window._pptunerApplyLayout)window._pptunerApplyLayout(1);
+  } else {
+    modalSC.playDir=1;modalSC.playing=true;
+    if(window._pptunerApplyLayout)window._pptunerApplyLayout(2);
+  }
+}
+
+function addToCart(){
+  if(modalProductIdx===null)return;
+  const prod=PRODUCTS[modalProductIdx];
+  if(!prod.variantId||prod.soldout)return;
+  const btn=document.getElementById('modalAddBtn');
+  btn.textContent='Adding...';btn.className='modal-add-btn adding';
+  btn.textContent='Adding...';btn.className='modal-add-btn adding';
+
+  // Send add-to-cart request to parent Shopify page via postMessage
+  if(window.parent!==window){
+    // We're in an iframe — ask parent to add to cart
+    const msgId='atc_'+Date.now();
+    function onReply(e){
+      if(!e.data||e.data.msgId!==msgId)return;
+      window.removeEventListener('message',onReply);
+      if(e.data.success){
+        btn.textContent='Added!';btn.className='modal-add-btn added';
+        setTimeout(()=>{btn.textContent='Add to cart';btn.className='modal-add-btn';},2000);
+      } else {
+        // Fallback: redirect parent to cart permalink
+        window.parent.postMessage({action:'navigate',url:'/cart/'+prod.variantId+':1'},'*');
+        btn.textContent='Add to cart';btn.className='modal-add-btn';
+      }
+    }
+    window.addEventListener('message',onReply);
+    window.parent.postMessage({action:'add-to-cart',variantId:prod.variantId,quantity:1,msgId:msgId},'*');
+    // Timeout fallback
+    setTimeout(()=>{window.removeEventListener('message',onReply);if(btn.textContent==='Adding...'){btn.textContent='Add to cart';btn.className='modal-add-btn';}},5000);
+  } else {
+    // Not in iframe (direct page or local testing) — try AJAX then fallback
+    fetch('/cart/add.js',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({items:[{id:parseInt(prod.variantId),quantity:1}]})
+    }).then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(()=>{
+      btn.textContent='Added!';btn.className='modal-add-btn added';
+      setTimeout(()=>{btn.textContent='Add to cart';btn.className='modal-add-btn';},2000);
+    }).catch(()=>{
+      btn.textContent='Added! (test)';btn.className='modal-add-btn added';
+      setTimeout(()=>{btn.textContent='Add to cart';btn.className='modal-add-btn';},2000);
+    });
+  }
+}
+
+function closeModal(){
+  const modal=document.getElementById('modal');modal.classList.remove('open');
+  setTimeout(()=>{modal.style.display='none';},300);
+  if(modalSC)modalSC.playing=false;
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// ── RENDER LOOP ────────────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const delta=clock.getDelta();
+
+  cardScenes.forEach((sc,i)=>{
+    if(!sc.loaded)return;
+    if(!sc.visible)return; // skip off-screen cards
+
+    // Track if anything is changing this frame
+    let needsRender=false;
+
+    if(sc.playing){
+      sc.current+=delta*sc.playDir;
+      if(sc.playDir===1&&sc.current>=sc.tEnd){sc.current=sc.tEnd;sc.playing=false;sc.isOpen=true;}
+      if(sc.playDir===-1&&sc.current<=sc.tStart){sc.current=sc.tStart;sc.playing=false;sc.isOpen=false;}
+      applyMap(sc.trackMap,sc.nodes,sc.current,PRODUCTS[sc.productIdx].type==='vinyl'?VINYL_LABELS:null);
+      needsRender=true;
+    }
+
+    // Smooth tilt interpolation (fast response)
+    const tLerp=1-Math.pow(0.001,delta);
+    const oldTiltX=sc.tiltX, oldTiltY=sc.tiltY;
+    sc.tiltX+=(sc.tiltTargetX-sc.tiltX)*tLerp;
+    sc.tiltY+=(sc.tiltTargetY-sc.tiltY)*tLerp;
+    if(Math.abs(sc.tiltX-oldTiltX)>0.001||Math.abs(sc.tiltY-oldTiltY)>0.001) needsRender=true;
+
+    // Smooth flip interpolation
+    const flipTarget=sc.flipped?1:0;
+    const oldFlip=sc.flipProgress;
+    sc.flipProgress+=(flipTarget-sc.flipProgress)*tLerp;
+    if(Math.abs(sc.flipProgress-oldFlip)>0.001) needsRender=true;
+
+    // Dirty flag (set on load, resize, visibility change)
+    if(sc.dirty){needsRender=true;sc.dirty=false;}
+
+    if(!needsRender)return; // nothing changed, skip render
+
+    // Camera positioning
+    const ptype=PRODUCTS[sc.productIdx].type;
+    const orig=origCfgs[i];
+    let basePos, baseTgt, baseFov;
+
+    if(ptype==='vinyl'){
+      const d=DEFAULTS.vinyl;
+      const progress=(sc.current-sc.tStart)/(sc.tEnd-sc.tStart);
+      const mx=d.mx+(d.mxOpen-d.mx)*progress;
+      basePos=[orig.pos[0]+mx, orig.pos[1]+d.my, orig.pos[2]];
+      baseTgt=[orig.tgt[0]+mx, orig.tgt[1]+d.my, orig.tgt[2]];
+      baseFov=d.zoom;
+    } else {
+      const d=DEFAULTS.cd;
+      basePos=[orig.pos[0]+d.mx, orig.pos[1]+d.my, orig.pos[2]];
+      baseTgt=[orig.tgt[0]+d.mx, orig.tgt[1]+d.my, orig.tgt[2]];
+      baseFov=d.zoom;
+    }
+
+    // Apply flip: rotate camera position around target by flipProgress*PI
+    const flipAngle=sc.flipProgress*Math.PI;
+    const dx=basePos[0]-baseTgt[0], dz=basePos[2]-baseTgt[2];
+    const cosA=Math.cos(flipAngle), sinA=Math.sin(flipAngle);
+    const rotX=dx*cosA-dz*sinA;
+    const rotZ=dx*sinA+dz*cosA;
+
+    // Apply tilt on top of flip
+    sc.camera.fov=baseFov;
+    sc.camera.position.set(baseTgt[0]+rotX+sc.tiltY, basePos[1]+sc.tiltX, baseTgt[2]+rotZ);
+    sc.camera.lookAt(new THREE.Vector3(baseTgt[0], baseTgt[1], baseTgt[2]));
+    sc.camera.updateProjectionMatrix();
+
+    const c=sc.renderer.domElement,dw=c.clientWidth,dh=c.clientHeight;
+    if(c.width!==dw||c.height!==dh){sc.renderer.setSize(dw,dh,false);sc.camera.aspect=dw/Math.max(dh,1);sc.camera.updateProjectionMatrix();}
+    sc.renderer.render(sc.scene,sc.camera);
+  });
+
+  if(modalSC&&modalSC.loaded&&document.getElementById('modal').classList.contains('open')){
+    const t=modalSC.type==='cd'?T_CD:T_VINYL;
+    if(modalSC.playing){
+      modalSC.current+=delta*modalSC.playDir;
+      if(modalSC.playDir===1&&modalSC.current>=t.e){modalSC.current=t.e;modalSC.playing=false;modalSC.isOpen=true;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent='CLOSE VINYL';}
+      if(modalSC.playDir===-1&&modalSC.current<=t.s){modalSC.current=t.s;modalSC.playing=false;modalSC.isOpen=false;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent='OPEN VINYL';}
+      applyMap(modalSC.trackMap,modalSC.nodes,modalSC.current,modalSC.type==='vinyl'?VINYL_LABELS:null);
+    }
+    if(modalSC._controls)modalSC._controls.update();
+    const c=modalCanvas,dw=c.clientWidth,dh=c.clientHeight;
+    if(c.width!==dw||c.height!==dh){modalSC.renderer.setSize(dw,dh,false);modalSC.camera.aspect=dw/Math.max(dh,1);modalSC.camera.updateProjectionMatrix();}
+    // Always fit: every frame, re-fit camera to model bbox + current canvas aspect.
+    // Tracks canvas resize + vinyl open/close animation smoothly with no pops.
+    fitCameraToModel(modalSC);
+    modalSC.renderer.render(modalSC.scene,modalSC.camera);
+  }
+}
+animate();
+
+// Card hover → tilt effect
+const TILT_MAX=5.0; // tilt intensity — camera offset in world units
+cardScenes.forEach((sc,i)=>{
+  const card=grid.children[i];
+  card.addEventListener('mousemove',e=>{
+    if(!sc.loaded)return;
+    const rect=card.getBoundingClientRect();
+    const nx=(e.clientX-rect.left)/rect.width*2-1; // -1 to 1
+    const ny=(e.clientY-rect.top)/rect.height*2-1;
+    sc.tiltTargetX=-ny*TILT_MAX; // tilt up/down
+    sc.tiltTargetY=nx*TILT_MAX;  // tilt left/right
+  });
+  card.addEventListener('mouseleave',()=>{
+    sc.tiltTargetX=0; sc.tiltTargetY=0;
+  });
+});
+
+// ── MODEL CONTROLS ─────────────────────────────────────────────────────────
+let ctrlOpen=false;
+function toggleCtrl(){
+  ctrlOpen=!ctrlOpen;
+  document.getElementById('ctrlPanel').classList.toggle('open',ctrlOpen);
+  document.getElementById('ctrlBtn').classList.toggle('active',ctrlOpen);
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.ctrl-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.getElementById('sec-vinyl').style.display=tab==='vinyl'?'flex':'none';
+  document.getElementById('sec-cd').style.display=tab==='cd'?'flex':'none';
+}
+
+// Store original camera configs per scene
+const origCfgs=cardScenes.map(sc=>({
+  pos:[...sc.cfg.pos], tgt:[...sc.cfg.tgt], fov:sc.cfg.fov
+}));
+
+// ─── HARDCODED DEFAULTS ─── paste exported values here ───
+const DEFAULTS={
+  vinyl:{fw:50,fh:100,zoom:39.5,mx:-1.1,my:0,sc:100,mxOpen:1},
+  cd:   {fw:50,fh:100,zoom:39.5,mx:0.1,my:-2.1,sc:68}
+};
+// ─────────────────────────────────────────────────────────
+
+function exportType(type){
+  const d=readSliders(type);
+  const line=type+': {fw:'+d.fw+',fh:'+d.fh+',zoom:'+d.zoom+',mx:'+d.mx+',my:'+d.my+',sc:'+d.sc+'}';
+  navigator.clipboard.writeText(line).then(()=>{
+    alert('Copied to clipboard — paste into DEFAULTS:\n\n'+line);
+  });
+}
+
+// Load saved settings from localStorage
+function loadSaved(type){
+  try{const s=localStorage.getItem('ctrl_'+type);return s?JSON.parse(s):{...DEFAULTS[type]};}
+  catch(e){return{...DEFAULTS[type]};}
+}
+function saveSetting(type){
+  const d=readSliders(type);
+  localStorage.setItem('ctrl_'+type,JSON.stringify(d));
+}
+
+function readSliders(type){
+  return{
+    fw:parseFloat(document.getElementById(type+'-fw').value),
+    fh:parseFloat(document.getElementById(type+'-fh').value),
+    zoom:parseFloat(document.getElementById(type+'-zoom').value),
+    mx:parseFloat(document.getElementById(type+'-mx').value),
+    my:parseFloat(document.getElementById(type+'-my').value),
+    sc:parseFloat(document.getElementById(type+'-sc').value)
+  };
+}
+
+function setSliders(type,d){
+  document.getElementById(type+'-fw').value=d.fw;
+  document.getElementById(type+'-fh').value=d.fh;
+  document.getElementById(type+'-zoom').value=d.zoom;
+  document.getElementById(type+'-mx').value=d.mx;
+  document.getElementById(type+'-my').value=d.my;
+  document.getElementById(type+'-sc').value=d.sc;
+  updateLabels(type);
+}
+
+function updateLabels(type){
+  const sec=document.getElementById('sec-'+type);
+  const inputs=sec.querySelectorAll('input[type=range]');
+  const labels=sec.querySelectorAll('.ctrl-val');
+  const ids=['fw','fh','zoom','mx','my','sc'];
+  inputs.forEach((inp,i)=>{
+    const v=parseFloat(inp.value);
+    if(ids[i]==='fw'||ids[i]==='fh'||ids[i]==='sc') labels[i].textContent=Math.round(v)+'%';
+    else if(ids[i]==='zoom') labels[i].textContent=v;
+    else labels[i].textContent=v.toFixed(1);
+  });
+}
+
+function applyType(type){
+  const d=readSliders(type);
+  updateLabels(type);
+  saveSetting(type);
+
+  // Apply frame size to matching cards
+  cardScenes.forEach((sc,i)=>{
+    const ptype=PRODUCTS[sc.productIdx].type;
+    if(ptype!==type)return;
+    const card=grid.children[i];
+    card.style.width='calc('+d.fw+'% - 20px)';
+    card.querySelector('canvas.card-canvas').style.aspectRatio=1/(d.fh/100);
+
+    const orig=origCfgs[i];
+    sc.camera.fov=d.zoom;
+    sc.camera.position.set(orig.pos[0]+d.mx, orig.pos[1]+d.my, orig.pos[2]);
+    sc.camera.lookAt(new THREE.Vector3(orig.tgt[0]+d.mx, orig.tgt[1]+d.my, orig.tgt[2]));
+    sc.camera.updateProjectionMatrix();
+
+    const s=d.sc/100;
+    sc.scene.traverse(n=>{
+      if(n.parent===sc.scene && n!==sc.camera && (n.isGroup||n.isObject3D)){
+        n.scale.set(s,s,s);
+      }
+    });
+  });
+}
+
+function resetType(type){
+  setSliders(type,{...DEFAULTS[type]});
+  applyType(type);
+  // Restore original styles for this type
+  cardScenes.forEach((sc,i)=>{
+    if(PRODUCTS[sc.productIdx].type!==type)return;
+    const card=grid.children[i];
+    card.style.width='';
+    card.querySelector('canvas.card-canvas').style.aspectRatio='';
+    const orig=origCfgs[i];
+    sc.camera.fov=orig.fov;
+    sc.camera.position.set(...orig.pos);
+    sc.camera.lookAt(...orig.tgt);
+    sc.camera.updateProjectionMatrix();
+    sc.scene.traverse(n=>{
+      if(n.parent===sc.scene && n!==sc.camera && (n.isGroup||n.isObject3D)) n.scale.set(1,1,1);
+    });
+  });
+  localStorage.removeItem('ctrl_'+type);
+}
+
+// Wire up slider events
+['vinyl','cd'].forEach(type=>{
+  document.getElementById('sec-'+type).querySelectorAll('input[type=range]').forEach(inp=>{
+    inp.addEventListener('input',()=>applyType(type));
+  });
+});
+
+// Load saved on startup
+['vinyl','cd'].forEach(type=>{
+  const saved=loadSaved(type);
+  setSliders(type,saved);
+  // Delay apply until models are loaded
+  const tryApply=()=>{
+    const ready=cardScenes.filter(sc=>PRODUCTS[sc.productIdx].type===type).every(sc=>sc.loaded);
+    if(ready) applyType(type); else setTimeout(tryApply,500);
+  };
+  tryApply();
+});
+
+// ── PRODUCT PAGE TUNER WITH LAYOUT 1/2 ── press T when product page is open ──
+(function(){
+  const S=[
+    {section:'LAYOUT'},
+    {label:'Page Max Width',sel:'.modal-inner',prop:'maxWidth',unit:'px',min:600,max:1800,step:10},
+    {label:'Page Padding',sel:'.modal-inner',prop:'padding',unit:'px',min:0,max:80,step:1},
+    {label:'Page Top Padding',sel:'.modal-inner',prop:'paddingTop',unit:'px',min:0,max:120,step:1},
+    {label:'Flex Direction',sel:'.modal-inner',prop:'flexDirection',unit:'',min:0,max:1,step:1,map:['row','column']},
+    {label:'Left Column %',sel:'.modal-left',prop:'width',unit:'%',min:20,max:100,step:1,link:'right'},
+    {label:'Column Gap',sel:'.modal-left',prop:'paddingRight',unit:'px',min:0,max:60,step:1},
+    {label:'Right Top Padding',sel:'.modal-right',prop:'paddingTop',unit:'px',min:0,max:100,step:1},
+    {label:'Right Width %',sel:'.modal-right',prop:'width',unit:'%',min:20,max:100,step:1},
+    {label:'Page BG',sel:'#modal',prop:'backgroundColor',type:'color'},
+
+    {section:'3D MODEL'},
+    {label:'Canvas Aspect Ratio',sel:'#modalCanvas',prop:'aspectRatio',unit:'',min:0.3,max:2.5,step:0.05},
+    {label:'Canvas Border Radius',sel:'.modal-canvas-wrap',prop:'borderRadius',unit:'px',min:0,max:30,step:1},
+    {label:'Zoom (FOV)',sel:'_3d',prop:'fov',unit:'',min:10,max:80,step:0.5,is3d:true},
+    {label:'Center X (left/right)',sel:'_3d',prop:'tx',unit:'',min:-10,max:10,step:0.1,is3d:true},
+    {label:'Center Y (up/down)',sel:'_3d',prop:'ty',unit:'',min:-10,max:10,step:0.1,is3d:true},
+    {label:'Distance',sel:'_3d',prop:'dist',unit:'',min:1,max:30,step:0.1,is3d:true},
+    {label:'Scale',sel:'_3d',prop:'sc',unit:'',min:20,max:200,step:1,is3d:true},
+
+    {section:'TITLE'},
+    {label:'Title Size',sel:'.modal-title',prop:'fontSize',unit:'px',min:8,max:80,step:1},
+    {label:'Title Weight',sel:'.modal-title',prop:'fontWeight',unit:'',min:100,max:900,step:100},
+    {label:'Title Margin Bottom',sel:'.modal-title',prop:'marginBottom',unit:'px',min:0,max:40,step:1},
+    {label:'Title Padding',sel:'.modal-title',prop:'padding',unit:'px',min:0,max:30,step:1},
+    {label:'Title Color',sel:'.modal-title',prop:'color',type:'color'},
+
+    {section:'PRICE'},
+    {label:'Price Size',sel:'.modal-price',prop:'fontSize',unit:'px',min:8,max:80,step:1},
+    {label:'Price Weight',sel:'.modal-price',prop:'fontWeight',unit:'',min:100,max:900,step:100},
+    {label:'Price Margin Bottom',sel:'.modal-price',prop:'marginBottom',unit:'px',min:0,max:60,step:1},
+    {label:'Price Padding',sel:'.modal-price',prop:'padding',unit:'px',min:0,max:30,step:1},
+    {label:'Price Color',sel:'.modal-price',prop:'color',type:'color'},
+
+    {section:'ADD TO CART BUTTON'},
+    {label:'Btn Width %',sel:'.modal-add-btn',prop:'width',unit:'%',min:20,max:100,step:1},
+    {label:'Btn Height',sel:'.modal-add-btn',prop:'height',unit:'px',min:30,max:80,step:1},
+    {label:'Btn Font Size',sel:'.modal-add-btn',prop:'fontSize',unit:'px',min:8,max:30,step:1},
+    {label:'Btn Radius',sel:'.modal-add-btn',prop:'borderRadius',unit:'px',min:0,max:30,step:1},
+    {label:'Btn Margin Top',sel:'.modal-add-btn',prop:'marginTop',unit:'px',min:0,max:60,step:1},
+    {label:'Btn Margin Bottom',sel:'.modal-add-btn',prop:'marginBottom',unit:'px',min:0,max:60,step:1},
+    {label:'Btn BG Color',sel:'.modal-add-btn',prop:'backgroundColor',type:'color'},
+    {label:'Btn Text Color',sel:'.modal-add-btn',prop:'color',type:'color'},
+
+    {section:'PRODUCT DETAILS'},
+    {label:'Details Padding',sel:'.modal-details',prop:'padding',unit:'px',min:0,max:40,step:1},
+    {label:'Details Margin Top',sel:'.modal-details',prop:'marginTop',unit:'px',min:0,max:40,step:1},
+    {label:'Features Size',sel:'.modal-features li',prop:'fontSize',unit:'px',min:8,max:60,step:1},
+    {label:'Features Padding',sel:'.modal-features li',prop:'paddingTop',unit:'px',min:0,max:30,step:1},
+    {label:'Features Color',sel:'.modal-features li',prop:'color',type:'color'},
+    {label:'Preorder Size',sel:'.modal-preorder',prop:'fontSize',unit:'px',min:6,max:24,step:1},
+    {label:'Preorder Color',sel:'.modal-preorder',prop:'color',type:'color'},
+
+    {section:'CONTACT SUPPORT'},
+    {label:'Support Size',sel:'.modal-support',prop:'fontSize',unit:'px',min:8,max:30,step:1},
+    {label:'Support Margin Top',sel:'.modal-support',prop:'marginTop',unit:'px',min:0,max:60,step:1},
+    {label:'Support Color',sel:'.modal-support',prop:'color',type:'color'},
+  ];
+
+  let tunerEl=null,dragOff=null,currentLayout=1;
+
+  // Default layouts — Layout 1: side by side (closed), Layout 2: full width + text below (open)
+  const LAYOUT_DEFAULTS={
+    1:{
+      'Page Max Width':1200,'Page Padding':40,'Page Top Padding':20,
+      'Flex Direction':0,'Left Column %':50,'Column Gap':30,'Right Top Padding':10,'Right Width %':50,
+      'Canvas Aspect Ratio':1,'Canvas Border Radius':0,
+      'Zoom (FOV)':39.6,'Center X (left/right)':0,'Center Y (up/down)':0,'Distance':10,'Scale':100,
+      'Title Size':24,'Title Weight':600,'Title Margin Bottom':10,'Title Padding':0,
+      'Price Size':28,'Price Weight':400,'Price Margin Bottom':30,'Price Padding':0,
+      'Btn Width %':100,'Btn Height':50,'Btn Font Size':16,'Btn Radius':5,'Btn Margin Top':0,'Btn Margin Bottom':30,
+      'Features Size':22,'Features Padding':12,'Details Padding':0,'Details Margin Top':0,
+      'Preorder Size':12,'Support Size':14,'Support Margin Top':30
+    },
+    2:{
+      'Page Max Width':1000,'Page Padding':40,'Page Top Padding':20,
+      'Flex Direction':1,'Left Column %':100,'Column Gap':0,'Right Top Padding':20,'Right Width %':100,
+      'Canvas Aspect Ratio':1.8,'Canvas Border Radius':0,
+      'Zoom (FOV)':39.6,'Center X (left/right)':0,'Center Y (up/down)':0,'Scale':100,
+      'Title Size':24,'Title Weight':600,'Title Margin Bottom':10,'Title Padding':0,
+      'Price Size':28,'Price Weight':400,'Price Margin Bottom':30,'Price Padding':0,
+      'Btn Width %':100,'Btn Height':50,'Btn Font Size':16,'Btn Radius':5,'Btn Margin Top':0,'Btn Margin Bottom':30,
+      'Features Size':22,'Features Padding':12,'Details Padding':0,'Details Margin Top':0,
+      'Preorder Size':12,'Support Size':14,'Support Margin Top':30
+    }
+  };
+
+  // Merge defaults with any saved overrides
+  const saved={1:{...LAYOUT_DEFAULTS[1]},2:{...LAYOUT_DEFAULTS[2]}};
+
+  // Read current slider values
+  function readAll(){
+    const vals={};let ci=0;
+    S.forEach(c=>{
+      if(c.section)return;
+      if(c.type==='color'){const el=document.getElementById('ptc'+ci);vals[c.label]=el?el.value:'#000000';}
+      else if(c.map){const el=document.getElementById('ptr'+ci);vals[c.label]=el?parseInt(el.value):0;}
+      else{const el=document.getElementById('ptn'+ci)||document.getElementById('ptr'+ci);vals[c.label]=el?parseFloat(el.value):0;}
+      ci++;
+    });
+    return vals;
+  }
+
+  // Apply saved values to sliders and page
+  function applyVals(vals){
+    let ci=0;
+    S.forEach(c=>{
+      if(c.section)return;
+      const idx=ci;
+      if(vals[c.label]!==undefined){
+        if(c.type==='color'){
+          const el=document.getElementById('ptc'+idx);if(el){el.value=vals[c.label];el.dispatchEvent(new Event('input'));}
+        } else {
+          const sl=document.getElementById('ptr'+idx);
+          const ni=document.getElementById('ptn'+idx);
+          if(sl){sl.value=vals[c.label];sl.dispatchEvent(new Event('input'));}
+          if(ni){ni.value=vals[c.label];}
+        }
+      }
+      ci++;
+    });
+  }
+
+  function gv(c){
+    if(c.is3d){
+      if(!modalSC)return c.prop==='fov'?39.6:c.prop==='sc'?100:c.prop==='dist'?10:0;
+      if(c.prop==='fov')return modalSC.camera?modalSC.camera.fov:39.6;
+      if(c.prop==='sc')return 100;
+      if(c.prop==='dist'&&modalSC.camera&&modalSC._controls){
+        return modalSC.camera.position.distanceTo(modalSC._controls.target);
+      }
+      return 0;
+    }
+    if(c.map){
+      const el=document.querySelector(c.sel);if(!el)return 0;
+      const cur=getComputedStyle(el)[c.prop];
+      return c.map.indexOf(cur)>=0?c.map.indexOf(cur):0;
+    }
+    const el=document.querySelector(c.sel);if(!el)return c.type==='color'?'#000000':(c.min||0);
+    if(c.type==='color'){const rgb=getComputedStyle(el)[c.prop];const m=rgb.match(/\d+/g);if(!m)return'#000000';return'#'+m.slice(0,3).map(v=>(+v).toString(16).padStart(2,'0')).join('');}
+    return parseFloat(getComputedStyle(el)[c.prop])||0;
+  }
+
+  function build(){
+    if(tunerEl){tunerEl.remove();tunerEl=null;return;}
+    tunerEl=document.createElement('div');
+    tunerEl.id='pptuner';
+    tunerEl.style.cssText='position:fixed;top:60px;right:10px;background:rgba(0,0,0,.94);color:#fff;padding:16px;z-index:100000;font-family:monospace;font-size:10px;border-radius:8px;width:320px;max-height:80vh;overflow-y:auto;cursor:default;border:1px solid #333;';
+    let html='<div id="pptuner-drag" style="font-weight:bold;font-size:13px;margin-bottom:10px;cursor:move;display:flex;justify-content:space-between;align-items:center"><span>PRODUCT PAGE TUNER</span><span id="pptuner-close" style="cursor:pointer;font-size:18px;color:#888">×</span></div>';
+
+    // Layout tabs
+    html+='<div style="display:flex;gap:4px;margin-bottom:10px">';
+    html+='<button id="pt-l1" style="flex:1;padding:6px;border:1px solid '+(currentLayout===1?'#e54d29':'#555')+';background:'+(currentLayout===1?'rgba(229,77,41,.15)':'none')+';color:'+(currentLayout===1?'#e54d29':'#888')+';cursor:pointer;font-size:10px;border-radius:4px;font-family:monospace">LAYOUT 1 (closed)</button>';
+    html+='<button id="pt-l2" style="flex:1;padding:6px;border:1px solid '+(currentLayout===2?'#e54d29':'#555')+';background:'+(currentLayout===2?'rgba(229,77,41,.15)':'none')+';color:'+(currentLayout===2?'#e54d29':'#888')+';cursor:pointer;font-size:10px;border-radius:4px;font-family:monospace">LAYOUT 2 (open)</button>';
+    html+='</div>';
+
+    // Animation toggle
+    html+='<button id="pt-toggle" style="padding:6px;background:#333;color:#fff;border:1px solid #555;cursor:pointer;font-size:10px;width:100%;margin-bottom:10px;border-radius:4px">OPEN / CLOSE VINYL</button>';
+
+    let ci=0;
+    S.forEach(c=>{
+      if(c.section){
+        html+='<div style="color:#e54d29;font-size:9px;letter-spacing:.2em;margin:12px 0 6px;padding-top:8px;border-top:1px solid #333">'+c.section+'</div>';
+        return;
+      }
+      const val=gv(c);
+      if(c.type==='color'){
+        html+='<div style="margin:4px 0;display:flex;align-items:center;justify-content:space-between"><span>'+c.label+'</span><input type="color" id="ptc'+ci+'" value="'+val+'" style="width:40px;height:20px;border:none;cursor:pointer;background:none"></div>';
+      } else if(c.map){
+        html+='<div style="margin:4px 0"><div style="display:flex;justify-content:space-between"><span>'+c.label+'</span><span id="ptv'+ci+'" style="color:#e54d29">'+c.map[val]+'</span></div>';
+        html+='<input type="range" id="ptr'+ci+'" min="0" max="'+(c.map.length-1)+'" step="1" value="'+val+'" style="width:100%;accent-color:#e54d29;height:3px"></div>';
+      } else {
+        html+='<div style="margin:4px 0"><div style="display:flex;justify-content:space-between;align-items:center"><span style="flex:1">'+c.label+'</span>';
+        html+='<button id="ptm'+ci+'" style="width:20px;height:20px;border:1px solid #555;background:none;color:#e54d29;cursor:pointer;font-size:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;margin:0 4px">−</button>';
+        html+='<input type="number" id="ptn'+ci+'" value="'+val+'" step="'+c.step+'" style="width:55px;background:#111;border:1px solid #444;color:#e54d29;font-size:10px;text-align:center;border-radius:3px;padding:2px;font-family:monospace">';
+        html+='<button id="ptp'+ci+'" style="width:20px;height:20px;border:1px solid #555;background:none;color:#e54d29;cursor:pointer;font-size:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;margin:0 0 0 4px">+</button>';
+        html+='</div>';
+        html+='<input type="range" id="ptr'+ci+'" min="'+(c.min<0?c.min:-500)+'" max="'+(c.max>500?c.max:500)+'" step="'+c.step+'" value="'+val+'" style="width:100%;accent-color:#e54d29;height:3px"></div>';
+      }
+      ci++;
+    });
+
+    html+='<div style="display:flex;gap:4px;margin-top:12px">';
+    html+='<button id="pt-save" style="flex:1;padding:8px;background:#e54d29;color:#fff;border:none;cursor:pointer;font-size:10px;border-radius:4px">SAVE LAYOUT '+currentLayout+'</button>';
+    html+='<button id="pt-copy" style="flex:1;padding:8px;background:#555;color:#fff;border:none;cursor:pointer;font-size:10px;border-radius:4px">COPY VALUES</button>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:4px;margin-top:4px">';
+    html+='<button id="pt-reset-default" style="flex:1;padding:6px;background:none;color:#888;border:1px solid #444;cursor:pointer;font-size:10px;border-radius:4px">RESET TO DEFAULT</button>';
+    html+='<button id="pt-load-saved" style="flex:1;padding:6px;background:none;color:#888;border:1px solid #444;cursor:pointer;font-size:10px;border-radius:4px">LOAD SAVED</button>';
+    html+='</div>';
+    html+='<button id="pt-export" style="margin-top:4px;padding:6px;background:none;color:#888;border:1px solid #444;cursor:pointer;font-size:10px;width:100%;border-radius:4px">EXPORT BOTH LAYOUTS</button>';
+    tunerEl.innerHTML=html;
+    document.body.appendChild(tunerEl);
+
+    // Draggable
+    const dh=document.getElementById('pptuner-drag');
+    dh.addEventListener('mousedown',e=>{if(e.target.id==='pptuner-close')return;dragOff={x:e.clientX-tunerEl.getBoundingClientRect().left,y:e.clientY-tunerEl.getBoundingClientRect().top};});
+    document.addEventListener('mousemove',e=>{if(!dragOff)return;tunerEl.style.left=(e.clientX-dragOff.x)+'px';tunerEl.style.top=(e.clientY-dragOff.y)+'px';tunerEl.style.right='auto';});
+    document.addEventListener('mouseup',()=>{dragOff=null;});
+    document.getElementById('pptuner-close').addEventListener('click',()=>{tunerEl.remove();tunerEl=null;});
+
+    // Wire up controls
+    ci=0;
+    S.forEach(c=>{
+      if(c.section)return;
+      const idx=ci;
+      if(c.type==='color'){
+        document.getElementById('ptc'+idx).addEventListener('input',function(){
+          document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=this.value;});
+        });
+      } else if(c.is3d){
+        const slider3=document.getElementById('ptr'+idx);
+        const numInp3=document.getElementById('ptn'+idx);
+        const minusBtn3=document.getElementById('ptm'+idx);
+        const plusBtn3=document.getElementById('ptp'+idx);
+        function apply3d(v){
+          slider3.value=v;numInp3.value=v;
+          if(!modalSC||!modalSC.loaded)return;
+          const ctl=modalSC._controls;
+          if(c.prop==='fov'){modalSC.camera.fov=v;modalSC.camera.updateProjectionMatrix();}
+          if(c.prop==='tx'&&ctl){ctl.target.x=modalSC.cfg.tgt[0]+v;modalSC.camera.position.x=modalSC.cfg.pos[0]+v;}
+          if(c.prop==='ty'&&ctl){ctl.target.y=modalSC.cfg.tgt[1]+v;modalSC.camera.position.y=modalSC.cfg.pos[1]+v;}
+          if(c.prop==='dist'&&ctl){
+            const dir=new THREE.Vector3().subVectors(modalSC.camera.position,ctl.target).normalize();
+            modalSC.camera.position.copy(ctl.target).addScaledVector(dir,v);
+          }
+          if(c.prop==='sc'){const s=v/100;modalSC.scene.traverse(n=>{if(n.parent===modalSC.scene&&n!==modalSC.camera&&(n.isGroup||n.isObject3D))n.scale.set(s,s,s);});}
+          if(ctl)ctl.update();
+        }
+        slider3.addEventListener('input',function(){apply3d(parseFloat(this.value));});
+        numInp3.addEventListener('input',function(){apply3d(parseFloat(this.value)||0);});
+        minusBtn3.addEventListener('click',function(){apply3d(parseFloat(numInp3.value)-(parseFloat(c.step)||1));});
+        plusBtn3.addEventListener('click',function(){apply3d(parseFloat(numInp3.value)+(parseFloat(c.step)||1));});
+      } else if(c.map){
+        document.getElementById('ptr'+idx).addEventListener('input',function(){
+          const v=parseInt(this.value);
+          document.getElementById('ptv'+idx).textContent=c.map[v];
+          document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=c.map[v];});
+        });
+      } else {
+        const slider=document.getElementById('ptr'+idx);
+        const numInp=document.getElementById('ptn'+idx);
+        const minusBtn=document.getElementById('ptm'+idx);
+        const plusBtn=document.getElementById('ptp'+idx);
+        function applyVal(v){
+          slider.value=v;numInp.value=v;
+          document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=v+c.unit;});
+          if(c.link==='right')document.querySelectorAll('.modal-right').forEach(el=>{el.style.width=(100-v)+'%';});
+        }
+        slider.addEventListener('input',function(){applyVal(parseFloat(this.value));});
+        numInp.addEventListener('input',function(){applyVal(parseFloat(this.value)||0);});
+        minusBtn.addEventListener('click',function(){applyVal(parseFloat(numInp.value)-(parseFloat(c.step)||1));});
+        plusBtn.addEventListener('click',function(){applyVal(parseFloat(numInp.value)+(parseFloat(c.step)||1));});
+      }
+      ci++;
+    });
+
+    // Layout tabs
+    document.getElementById('pt-l1').addEventListener('click',()=>{
+      saved[currentLayout]=readAll();currentLayout=1;
+      tunerEl.remove();tunerEl=null;
+      if(Object.keys(saved[1]).length){setTimeout(()=>{build();applyVals(saved[1]);},50);}else build();
+    });
+    document.getElementById('pt-l2').addEventListener('click',()=>{
+      saved[currentLayout]=readAll();currentLayout=2;
+      tunerEl.remove();tunerEl=null;
+      if(Object.keys(saved[2]).length){setTimeout(()=>{build();applyVals(saved[2]);},50);}else build();
+    });
+
+    // Toggle vinyl
+    document.getElementById('pt-toggle').addEventListener('click',()=>{
+      if(!modalSC||!modalSC.loaded||modalSC.playing)return;
+      if(modalSC.isOpen){
+        modalSC.playDir=-1;modalSC.playing=true;
+        if(window._pptunerApplyLayout)window._pptunerApplyLayout(1);
+      } else {
+        modalSC.playDir=1;modalSC.playing=true;
+        if(window._pptunerApplyLayout)window._pptunerApplyLayout(2);
+      }
+    });
+
+    // Save current layout
+    document.getElementById('pt-save').addEventListener('click',function(){
+      saved[currentLayout]=readAll();
+      try{localStorage.setItem('pptuner_layout'+currentLayout,JSON.stringify(saved[currentLayout]));}catch(e){}
+      this.textContent='SAVED!';setTimeout(()=>{this.textContent='SAVE LAYOUT '+currentLayout;},1500);
+    });
+
+    // Copy values
+    document.getElementById('pt-copy').addEventListener('click',function(){
+      let lines=['/* Layout '+currentLayout+' Values */'];let ci2=0;
+      S.forEach(c=>{
+        if(c.section){lines.push('\n/* '+c.section+' */');return;}
+        if(c.type==='color')lines.push(c.label+': '+document.getElementById('ptc'+ci2).value);
+        else if(c.map)lines.push(c.label+': '+c.map[parseInt(document.getElementById('ptr'+ci2).value)]);
+        else lines.push(c.label+': '+document.getElementById('ptr'+ci2).value+(c.unit||''));
+        ci2++;
+      });
+      navigator.clipboard.writeText(lines.join('\n')).then(()=>{this.textContent='COPIED!';setTimeout(()=>{this.textContent='COPY VALUES';},1500);});
+    });
+
+    // Export both layouts
+    document.getElementById('pt-reset-default').addEventListener('click',function(){
+      saved[currentLayout]={...LAYOUT_DEFAULTS[currentLayout]};
+      tunerEl.remove();tunerEl=null;
+      setTimeout(()=>{build();applyVals(saved[currentLayout]);},50);
+    });
+
+    document.getElementById('pt-load-saved').addEventListener('click',function(){
+      try{
+        const ls=localStorage.getItem('pptuner_layout'+currentLayout);
+        if(ls){
+          saved[currentLayout]={...LAYOUT_DEFAULTS[currentLayout],...JSON.parse(ls)};
+          tunerEl.remove();tunerEl=null;
+          setTimeout(()=>{build();applyVals(saved[currentLayout]);},50);
+        } else {
+          this.textContent='NO SAVED DATA';setTimeout(()=>{this.textContent='LOAD SAVED';},1500);
+        }
+      }catch(e){this.textContent='ERROR';setTimeout(()=>{this.textContent='LOAD SAVED';},1500);}
+    });
+
+    document.getElementById('pt-export').addEventListener('click',function(){
+      saved[currentLayout]=readAll();
+      const out=JSON.stringify({layout1:saved[1],layout2:saved[2]},null,2);
+      navigator.clipboard.writeText(out).then(()=>{this.textContent='BOTH EXPORTED!';setTimeout(()=>{this.textContent='EXPORT BOTH LAYOUTS';},1500);});
+    });
+  }
+
+  // Load saved layouts from localStorage — merge with defaults
+  try{
+    const l1=localStorage.getItem('pptuner_layout1');if(l1)Object.assign(saved[1],JSON.parse(l1));
+    const l2=localStorage.getItem('pptuner_layout2');if(l2)Object.assign(saved[2],JSON.parse(l2));
+  }catch(e){}
+
+  // Auto-switch layout when vinyl opens/closes
+  const transEls='.modal-inner,.modal-left,.modal-right,.modal-title,.modal-price,.modal-add-btn,.modal-details,.modal-canvas-wrap,#modalCanvas,.modal-features li,.modal-preorder,.modal-support';
+
+  function applyLayoutValues(layoutNum){
+    S.forEach(c=>{
+      if(c.section)return;
+      const val=saved[layoutNum][c.label];
+      if(val===undefined)return;
+      if(c.type==='color'){document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=val;});}
+      else if(c.is3d){
+        if(modalSC&&modalSC.loaded){
+          const ctl=modalSC._controls;
+          if(c.prop==='fov'){modalSC.camera.fov=val;modalSC.camera.updateProjectionMatrix();}
+          if(c.prop==='tx'&&ctl){ctl.target.x=modalSC.cfg.tgt[0]+val;modalSC.camera.position.x=modalSC.cfg.pos[0]+val;}
+          if(c.prop==='ty'&&ctl){ctl.target.y=modalSC.cfg.tgt[1]+val;modalSC.camera.position.y=modalSC.cfg.pos[1]+val;}
+          if(c.prop==='dist'&&ctl){const dir=new THREE.Vector3().subVectors(modalSC.camera.position,ctl.target).normalize();modalSC.camera.position.copy(ctl.target).addScaledVector(dir,val);}
+          if(c.prop==='sc'){const s=val/100;modalSC.scene.traverse(n=>{if(n.parent===modalSC.scene&&n!==modalSC.camera&&(n.isGroup||n.isObject3D))n.scale.set(s,s,s);});}
+          if(ctl)ctl.update();
+        }
+      } else if(c.map){document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=c.map[val];});}
+      else{
+        document.querySelectorAll(c.sel).forEach(el=>{el.style[c.prop]=val+c.unit;});
+        if(c.link==='right')document.querySelectorAll('.modal-right').forEach(el=>{el.style.width=(100-val)+'%';});
+      }
+    });
+  }
+
+  // Staggered bouncy rubber-band transitions — synced to 2.5s vinyl animation
+  const stagger=[
+    {sel:'.modal-inner',delay:0,dur:1.6},
+    {sel:'.modal-left',delay:0,dur:1.8},
+    {sel:'.modal-canvas-wrap',delay:0.05,dur:1.7},
+    {sel:'#modalCanvas',delay:0.05,dur:1.7},
+    {sel:'.modal-right',delay:0.15,dur:1.6},
+    {sel:'.modal-title',delay:0.2,dur:1.5},
+    {sel:'.modal-price',delay:0.25,dur:1.4},
+    {sel:'.modal-add-btn',delay:0.3,dur:1.3},
+    {sel:'.modal-details',delay:0.35,dur:1.25},
+    {sel:'.modal-features li',delay:0.35,dur:1.25},
+    {sel:'.modal-preorder',delay:0.4,dur:1.2},
+    {sel:'.modal-support',delay:0.45,dur:1.15},
+  ];
+  const bounce='cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+  window._pptunerApplyLayout=function(layoutNum){
+    if(!saved[layoutNum]||!Object.keys(saved[layoutNum]).length)return;
+    currentLayout=layoutNum;
+
+    // Step 1: set staggered bouncy transitions
+    stagger.forEach(s=>{
+      document.querySelectorAll(s.sel).forEach(el=>{
+        el.style.transition='all '+s.dur+'s '+bounce+' '+s.delay+'s';
+      });
+    });
+
+    // Step 2: wait one frame so browser registers transitions, THEN apply values
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        applyLayoutValues(layoutNum);
+
+        if(tunerEl){
+          tunerEl.remove();tunerEl=null;
+          setTimeout(()=>{build();},1200);
+        }
+
+        // Step 3: remove transitions after longest animation completes (max delay + dur ≈ 1.75s)
+        setTimeout(()=>{
+          stagger.forEach(s=>{
+            document.querySelectorAll(s.sel).forEach(el=>{el.style.transition='';});
+          });
+        },2200);
+      });
+    });
+  };
+
+  window.addEventListener('keydown',e=>{if(e.key==='t'||e.key==='T'){const modal=document.getElementById('modal');if(modal&&modal.classList.contains('open'))build();}});
+})();
+
+</script>
+</body>
+</html>

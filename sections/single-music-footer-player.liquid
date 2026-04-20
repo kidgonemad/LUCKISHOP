@@ -1,0 +1,1009 @@
+{% comment %}
+  <!--
+  Copyright (c) 2026 Single Media, Inc - ALL RIGHTS RESERVED
+
+  NOTICE:  All information contained herein is, and remains the property of Single Media, Inc
+  and its suppliers, if any. The intellectual and technical concepts contained herein are
+  proprietary to Single Media, Inc and its suppliers and may be covered by U.S. and Foreign Patents,
+  patents in process, and are protected by trade secret or copyright law. Dissemination of this
+  information or reproduction of this material is strictly forbidden unless prior
+  written permission is obtained from Single Media, Inc.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  -->
+{% endcomment %}
+
+<style>
+  body {
+    padding-bottom: 90px;
+  }
+
+  body.expanded-player-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
+  @media screen and (max-width: 750px) {
+    body {
+      padding-bottom: 118px;
+    }
+
+    .single-footer-player #main_info {
+      gap: 0.75em;
+    }
+  }
+  audio {
+    display: none !important;
+  }
+  audio::-webkit-media-controls {
+    display: none !important;
+  }
+  audio::-webkit-media-controls-enclosure {
+    display: none !important;
+  }
+  #mobile-progress {
+    display: none;
+    width: 100%;
+    height: 2px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  @media screen and (min-width: 751px) {
+    #mobile-progress {
+      display: none !important;
+    }
+  }
+  @media screen and (max-width: 750px) {
+    #mobile-progress {
+      display: flex !important;
+    }
+    #waveform {
+      display: none !important;
+    }
+  }
+
+  #mobile-progress-bg {
+    width: 100%;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    left: 0;
+  }
+  #mobile-progress-fill {
+    width: 0%;
+    height: 2px;
+    background-color: {{ section.settings.progress_color }};
+    position: absolute;
+    left: 0;
+    pointer-events: none;
+    transition: width 0.1s linear;
+  }
+
+  /* Expanded Mobile Player */
+  #expanded-player-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+
+  #expanded-player-backdrop.active {
+    opacity: 1;
+  }
+
+  @media screen and (max-width: 750px) {
+    #expanded-player-backdrop.active {
+      display: block;
+    }
+
+    #main_info {
+      cursor: pointer;
+    }
+
+    #main_info:active {
+      opacity: 0.8;
+    }
+  }
+
+  #expanded-player {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 85vh;
+    z-index: 9999;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    overflow: hidden;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  @media screen and (max-width: 750px) {
+    #expanded-player {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  #expanded-player.active {
+    transform: translateY(0);
+  }
+
+  #expanded-player-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  #expanded-player-bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(40px);
+    transform: scale(1.1);
+  }
+
+  #expanded-player-bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+
+  .expanded-drag-handle {
+    width: 100%;
+    padding: 14px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .expanded-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .expanded-drag-bar {
+    width: 25vw;
+    height: 5px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 2.5px;
+  }
+
+  .expanded-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px 24px;
+    overflow: hidden;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .expanded-artwork {
+    width: 100%;
+    margin: 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+  }
+
+  .expanded-artwork img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .expanded-track-info {
+    margin-top: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .expanded-track-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    font-family: inherit;
+    color: {{ section.settings.text_color }};
+  }
+
+  .expanded-track-artist {
+    font-size: 14px;
+    opacity: 0.7;
+    font-family: inherit;
+    color: {{ section.settings.text_color }};
+  }
+
+  .expanded-progress-container {
+    margin-top: 16px;
+    flex-shrink: 0;
+  }
+
+  .expanded-progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .expanded-progress-fill {
+    height: 100%;
+    background-color: {{ section.settings.progress_color }};
+    border-radius: 2px;
+    position: relative;
+    pointer-events: none;
+  }
+
+  .expanded-progress-thumb {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-color: {{ section.settings.progress_color }};
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .expanded-time-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    opacity: 0.6;
+    font-family: inherit;
+    color: {{ section.settings.text_color }};
+  }
+
+  .expanded-controls {
+    margin: 16px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    flex-shrink: 0;
+  }
+
+  .expanded-controls .material-icons {
+    font-size: 35px;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.2s;
+    color: {{ section.settings.text_color }};
+  }
+
+  .expanded-controls .material-icons:active {
+    opacity: 0.6;
+  }
+
+  .expanded-controls .play-pause-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .expanded-controls .play-pause-btn:active {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .expanded-controls .play-pause-btn .material-icons {
+    font-size: 36px;
+    color: {{ section.settings.text_color }};
+  }
+</style>
+
+<div
+  class="single-footer-player"
+  style="background-color:{{ section.settings.player_bg }}; color:{{ section.settings.text_color }};"
+>
+  <div class="single-col col-1_4" id="main_info">
+    <div class="track-thumbnail">
+      <img src="{{ product.featured_image.src | img_url: '120x120' }}" loading="lazy" height="60" width="60">
+    </div>
+    <div class="track-info">
+      <span class="track-title"></span>
+      <span class="track-artist"></span>
+    </div>
+  </div>
+
+  <div class="single-col col-2_4" id="progress">
+    <div id="mobile-progress">
+      <div id="mobile-progress-bg"></div>
+      <div id="mobile-progress-fill"></div>
+    </div>
+    <div id="waveform" class="track-waveform"></div>
+  </div>
+
+  <div class="single-col col-1_4" id="controls">
+    <div class="track-details small">
+      <div class="track-time">
+        <span class="elapsed">00:00</span>
+        <span class="divider">/ </span>
+        <span class="remaining">00:00</span>
+      </div>
+      <div class="track-meta" style="display:none;">
+        <span class="track-tuning"></span>
+        <span style="opacity: .25;">•</span>
+        <span class="track-bpm"></span>
+      </div>
+    </div>
+    <div class="player-controls">
+      <span class="prev material-icons"> skip_previous </span>
+      <span class="play material-icons" id="playPause">
+        <span id="play" class="material-icons">play_circle_outline</span>
+        <span id="pause" style="display: none;" class="material-icons">pause_circle_outline</span>
+      </span>
+      <span class="next material-icons"> skip_next </span>
+    </div>
+  </div>
+</div>
+
+<!-- Expanded Mobile Player -->
+<div id="expanded-player-backdrop"></div>
+<div id="expanded-player">
+  <div id="expanded-player-bg">
+    <img id="expanded-player-bg-image" src="" alt="">
+    <div id="expanded-player-bg-overlay"></div>
+  </div>
+
+  <div class="expanded-drag-handle" id="drag-handle">
+    <div class="expanded-drag-bar"></div>
+  </div>
+
+  <div class="expanded-content">
+    <div class="expanded-artwork">
+      <img src="{{ product.featured_image.src | img_url: '800x800' }}" alt="Album Artwork" id="expanded-artwork">
+    </div>
+
+    <div class="expanded-track-info">
+      <div class="expanded-track-title" id="expanded-title">Track Title</div>
+      <div class="expanded-track-artist" id="expanded-artist">Artist Name</div>
+    </div>
+
+    <div class="expanded-progress-container">
+      <div class="expanded-progress-bar" id="expanded-progress-bar">
+        <div class="expanded-progress-fill" id="expanded-progress-fill">
+          <div class="expanded-progress-thumb"></div>
+        </div>
+      </div>
+      <div class="expanded-time-labels">
+        <span id="expanded-elapsed">00:00</span>
+        <span id="expanded-duration">00:00</span>
+      </div>
+    </div>
+
+    <div class="expanded-controls">
+      <span class="material-icons" id="expanded-prev">skip_previous</span>
+      <div class="play-pause-btn" id="expanded-play-pause">
+        <span class="material-icons" id="expanded-play-icon">play_arrow</span>
+      </div>
+      <span class="material-icons" id="expanded-next">skip_next</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/wavesurfer.js@7.11.1"></script>
+
+<script>
+  var ignoreSilenceModeProcessed = false;
+  function ignoreSilenceMode() {
+    if (ignoreSilenceModeProcessed) {
+      return;
+    }
+    const audioData =
+      'data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA//////////////////////////////////////////////////////////////////8AAABhTEFNRTMuMTAwA8MAAAAAAAAAABQgJAUHQQAB9AAAAnGMHkkIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQxAADgnABGiAAQBCqgCRMAAgEAH///////////////7+n/9FTuQsQH//////2NG0jWUGlio5gLQTOtIoeR2WX////X4s9Atb/JRVCbBUpeRUq//////////////////9RUi0f2jn/+xDECgPCjAEQAABN4AAANIAAAAQVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+
+    let tmp = document.createElement('div');
+    tmp.innerHTML = '<audio x-webkit-airplay="deny"></audio>';
+
+    let audioSilentMode = tmp.children.item(0);
+    audioSilentMode.src = audioData;
+    audioSilentMode.preload = 'auto';
+    audioSilentMode.type = 'audio/mpeg';
+    audioSilentMode.disableRemotePlayback = true;
+    audioSilentMode.play();
+    ignoreSilenceModeProcessed = true;
+  }
+
+  var singleAlbumPlayer = {
+    links: document.querySelectorAll('#playlist a'),
+    currentTrack: 0,
+    currentTrackData: false,
+    hasLoaded: false,
+    initialLoad: false,
+    expandedPlayerActive: false,
+    dragStartY: 0,
+    dragCurrentY: 0,
+    isDragging: false,
+
+    wavesurfer: WaveSurfer.create({
+      container: '#waveform',
+      waveColor: '{{ section.settings.wave_color }}',
+      progressColor: '{{ section.settings.progress_color }}',
+      height: 60,
+      barHeight: 1,
+      barWidth: 3,
+      barRadius: 3,
+      cursorWidth: 0,
+      hideScrollbar: true,
+    }),
+
+    setupMediaSession: function () {
+      var self = this;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', function () {
+          if (!ignoreSilenceModeProcessed) ignoreSilenceMode();
+          self.wavesurfer.play();
+        });
+        navigator.mediaSession.setActionHandler('pause', function () {
+          self.wavesurfer.pause();
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', function () {
+          var newIndex = self.currentTrack - 1 <= 0 ? self.links.length - 1 : self.currentTrack - 1;
+          self.setCurrentSong(newIndex);
+        });
+        navigator.mediaSession.setActionHandler('nexttrack', function () {
+          var newIndex = self.currentTrack + 1 > self.links.length - 1 ? 0 : self.currentTrack + 1;
+          self.setCurrentSong(newIndex);
+        });
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      }
+    },
+
+    updateMediaSessionMetadata: function () {
+      if ('mediaSession' in navigator && this.currentTrackData) {
+        var smallArtSrc = document.querySelector('.track-thumbnail img').src;
+        var highResArtSrc = smallArtSrc.replace('_120x120', '_1024x1024');
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: this.currentTrackData.title,
+          artist: this.currentTrackData.artist,
+          album: '{{ product.title }}',
+          artwork: [
+            { src: smallArtSrc, sizes: '96x96', type: 'image/jpeg' },
+            { src: smallArtSrc, sizes: '128x128', type: 'image/jpeg' },
+            { src: highResArtSrc, sizes: '512x512', type: 'image/jpeg' },
+            { src: highResArtSrc, sizes: '1024x1024', type: 'image/jpeg' },
+          ],
+        });
+      }
+    },
+
+    openExpandedPlayer: function () {
+      if (window.innerWidth <= 750) {
+        this.expandedPlayerActive = true;
+        var backdrop = document.getElementById('expanded-player-backdrop');
+        var expandedPlayer = document.getElementById('expanded-player');
+
+        // Disable body scroll
+        document.body.classList.add('expanded-player-open');
+
+        // Reset any inline styles from previous interactions
+        expandedPlayer.style.transition = '';
+        expandedPlayer.style.transform = '';
+
+        backdrop.style.display = 'block';
+        expandedPlayer.style.display = 'flex';
+        // Force reflow to enable transition
+        backdrop.offsetHeight;
+        expandedPlayer.offsetHeight;
+        backdrop.classList.add('active');
+        expandedPlayer.classList.add('active');
+        this.updateExpandedPlayerInfo();
+        this.updateExpandedPlayerProgress();
+      }
+    },
+
+    closeExpandedPlayer: function () {
+      var self = this;
+      this.expandedPlayerActive = false;
+      var backdrop = document.getElementById('expanded-player-backdrop');
+      var expandedPlayer = document.getElementById('expanded-player');
+
+      // Re-enable body scroll
+      document.body.classList.remove('expanded-player-open');
+
+      // Ensure transition is enabled for smooth close animation
+      expandedPlayer.style.transition = 'transform 0.3s ease-out';
+      expandedPlayer.style.transform = '';
+
+      backdrop.classList.remove('active');
+      expandedPlayer.classList.remove('active');
+
+      // Wait for transition to complete before hiding
+      setTimeout(function () {
+        backdrop.style.display = 'none';
+        expandedPlayer.style.display = 'none';
+        expandedPlayer.style.transition = '';
+      }, 300);
+    },
+
+    updateExpandedPlayerInfo: function () {
+      if (this.currentTrackData) {
+        document.getElementById('expanded-title').textContent = this.currentTrackData.title;
+        document.getElementById('expanded-artist').textContent = this.currentTrackData.artist;
+
+        var artworkSrc = document.querySelector('.track-thumbnail img').src.replace('_120x120', '_800x800');
+        document.getElementById('expanded-artwork').src = artworkSrc;
+
+        // Update background image
+        var bgImage = document.getElementById('expanded-player-bg-image');
+        if (bgImage) {
+          bgImage.src = artworkSrc;
+        }
+      }
+    },
+
+    updateExpandedPlayerProgress: function () {
+      var totalTime = this.wavesurfer.getDuration();
+      var currentTime = this.wavesurfer.getCurrentTime();
+
+      if (totalTime > 0) {
+        var progressPercent = (currentTime / totalTime) * 100;
+        var fill = document.getElementById('expanded-progress-fill');
+        if (fill) fill.style.width = progressPercent + '%';
+      } else {
+        // If duration is not available yet, set progress to 0
+        var fill = document.getElementById('expanded-progress-fill');
+        if (fill) fill.style.width = '0%';
+      }
+
+      document.getElementById('expanded-elapsed').textContent = this.toHHMMSS(currentTime);
+      document.getElementById('expanded-duration').textContent = totalTime > 0 ? this.toHHMMSS(totalTime) : '00:00';
+    },
+
+    updateExpandedPlayerPlayState: function (isPlaying) {
+      var icon = document.getElementById('expanded-play-icon');
+      if (icon) {
+        icon.textContent = isPlaying ? 'pause' : 'play_arrow';
+      }
+    },
+
+    addEventListeners: function addEventListeners() {
+      var self = this;
+
+      // Window resize handler - close expanded player if resized to desktop
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 750 && self.expandedPlayerActive) {
+          self.closeExpandedPlayer();
+        }
+      });
+
+      // Expanded player events (mobile only)
+      if (window.innerWidth <= 750) {
+        document.getElementById('main_info').addEventListener('click', function () {
+          self.openExpandedPlayer();
+        });
+
+        // Drag handle
+        var dragHandle = document.getElementById('drag-handle');
+        var artwork = document.querySelector('.expanded-artwork');
+        var expandedPlayer = document.getElementById('expanded-player');
+
+        var handleTouchStart = function (e) {
+          self.isDragging = true;
+          self.dragStartY = e.touches[0].clientY;
+          self.dragCurrentY = self.dragStartY;
+          expandedPlayer.style.transition = 'none';
+        };
+
+        var handleTouchMove = function (e) {
+          if (!self.isDragging) return;
+
+          self.dragCurrentY = e.touches[0].clientY;
+          var diff = self.dragCurrentY - self.dragStartY;
+
+          if (diff > 0) {
+            expandedPlayer.style.transform = 'translateY(' + diff + 'px)';
+          }
+        };
+
+        var handleTouchEnd = function (e) {
+          if (!self.isDragging) return;
+
+          self.isDragging = false;
+          var diff = self.dragCurrentY - self.dragStartY;
+
+          // Close if dragged down more than 50px
+          if (diff > 50) {
+            self.closeExpandedPlayer();
+          } else {
+            // Snap back to open position
+            expandedPlayer.style.transition = 'transform 0.3s ease-out';
+            expandedPlayer.style.transform = '';
+            // Clear transition after animation completes
+            setTimeout(function () {
+              expandedPlayer.style.transition = '';
+            }, 300);
+          }
+        };
+
+        dragHandle.addEventListener('touchstart', handleTouchStart);
+        dragHandle.addEventListener('touchmove', handleTouchMove);
+        dragHandle.addEventListener('touchend', handleTouchEnd);
+
+        artwork.addEventListener('touchstart', handleTouchStart);
+        artwork.addEventListener('touchmove', handleTouchMove);
+        artwork.addEventListener('touchend', handleTouchEnd);
+
+        // Backdrop click to close
+        document.getElementById('expanded-player-backdrop').addEventListener('click', function () {
+          self.closeExpandedPlayer();
+        });
+
+        // Expanded player controls
+        document.getElementById('expanded-play-pause').addEventListener('click', function () {
+          if (!ignoreSilenceModeProcessed) ignoreSilenceMode();
+          self.wavesurfer.playPause();
+        });
+
+        document.getElementById('expanded-prev').addEventListener('click', function () {
+          self.setCurrentSong(self.currentTrack - 1 <= 0 ? self.links.length - 1 : self.currentTrack - 1);
+        });
+
+        document.getElementById('expanded-next').addEventListener('click', function () {
+          self.setCurrentSong(self.currentTrack + 1 > self.links.length - 1 ? 0 : self.currentTrack + 1);
+        });
+
+        document.getElementById('expanded-progress-bar').addEventListener('click', function (e) {
+          var rect = this.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var width = rect.width;
+          if (width > 0) {
+            var percentage = x / width;
+            if (percentage >= 0 && percentage <= 1) {
+              self.wavesurfer.seekTo(percentage);
+            }
+          }
+        });
+      }
+
+      Array.prototype.forEach.call(this.links, function (link, index) {
+        if (link.dataset.previewLink !== '') {
+          $.ajax({
+            url: link.dataset.previewLink,
+            dataType: 'text',
+            type: 'GET',
+            success: function (previewURL) {
+              link.dataset.href = previewURL;
+              var parentLink = link.parentElement;
+              if (parentLink && parentLink.href) {
+                parentLink.href = previewURL;
+              }
+
+              link.addEventListener('click', function (e) {
+                e.preventDefault();
+                self.setCurrentSong(index);
+              });
+
+              if (index == 0) {
+                self.initialLoad = true;
+                self.setCurrentSong(0);
+              }
+            },
+            error: function (XMLHttpRequest) {
+              console.log('Error playing track');
+            },
+          });
+        }
+      });
+
+      document.querySelector('#playPause').addEventListener('click', function () {
+        if (!ignoreSilenceModeProcessed) {
+          ignoreSilenceMode();
+        }
+        self.wavesurfer.playPause();
+      });
+
+      document.querySelector('.player-controls .prev').addEventListener('click', function () {
+        self.setCurrentSong(self.currentTrack - 1 <= 0 ? self.links.length - 1 : self.currentTrack - 1);
+      });
+
+      document.querySelector('.player-controls .next').addEventListener('click', function () {
+        self.setCurrentSong(self.currentTrack + 1 > self.links.length - 1 ? 0 : self.currentTrack + 1);
+      });
+
+      document.querySelector('#mobile-progress').addEventListener('click', function (e) {
+        var rect = this.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var width = rect.width;
+        if (width > 0) {
+          var percentage = x / width;
+          if (percentage >= 0 && percentage <= 1) {
+            self.wavesurfer.seekTo(percentage);
+          }
+        }
+      });
+
+      var atcs = document.querySelectorAll('.single-tracklist .single-track-add-to-cart');
+      atcs.forEach(function (atc) {
+        atc.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var variantId = atc.dataset.variantId;
+          var trackId = atc.dataset.trackId;
+          self.addTrackToCart(variantId, trackId);
+        });
+      });
+    },
+
+    addWavesurferListeners: function addWavesurferListeners() {
+      var self = this;
+
+      this.wavesurfer.on('play', function () {
+        document.querySelector('#play').style.display = 'none';
+        document.querySelector('#pause').style.display = '';
+        self.updateExpandedPlayerPlayState(true);
+
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+
+        var playlistIcons = document.querySelectorAll('#playlist .single-play-icon i');
+        if (playlistIcons.length > 0) {
+          Array.prototype.forEach.call(playlistIcons, function (icon, index) {
+            icon.innerHTML = 'play_circle_outline';
+          });
+        }
+        var trackId = self.currentTrackData.trackId;
+        var playPauseInline = document.querySelector('[data-track-id="' + trackId + '"] .single-play-icon i');
+        if (playPauseInline) playPauseInline.innerHTML = 'pause_circle_outline';
+      });
+
+      this.wavesurfer.on('pause', function () {
+        document.querySelector('#play').style.display = 'block';
+        document.querySelector('#pause').style.display = 'none';
+        self.updateExpandedPlayerPlayState(false);
+
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+
+        var playlistIcons = document.querySelectorAll('#playlist .single-play-icon i');
+        if (playlistIcons.length > 0) {
+          Array.prototype.forEach.call(playlistIcons, function (icon, index) {
+            icon.innerHTML = 'play_circle_outline';
+          });
+        }
+      });
+
+      this.wavesurfer.on('audioprocess', function () {
+        var totalTime = self.wavesurfer.getDuration(),
+          currentTime = self.wavesurfer.getCurrentTime();
+
+        if (totalTime > 0) {
+          var progressPercent = (currentTime / totalTime) * 100;
+          var fill = document.querySelector('#mobile-progress-fill');
+          if (fill) fill.style.width = progressPercent + '%';
+        }
+
+        if (self.wavesurfer.isPlaying()) {
+          document.querySelector('.track-time .elapsed').innerHTML = self.toHHMMSS(currentTime);
+          document.querySelector('.track-time .remaining').innerHTML = self.toHHMMSS(totalTime);
+
+          if (self.expandedPlayerActive) {
+            self.updateExpandedPlayerProgress();
+          }
+        }
+      });
+
+      this.wavesurfer.on('seek', function (position) {
+        var totalTime = self.wavesurfer.getDuration();
+        var currentTime = self.wavesurfer.getCurrentTime();
+
+        if (totalTime > 0) {
+          var progressPercent = (currentTime / totalTime) * 100;
+          var fill = document.querySelector('#mobile-progress-fill');
+          if (fill) fill.style.width = progressPercent + '%';
+        }
+
+        document.querySelector('.track-time .elapsed').innerHTML = self.toHHMMSS(self.wavesurfer.getCurrentTime());
+
+        if (self.expandedPlayerActive) {
+          self.updateExpandedPlayerProgress();
+        }
+      });
+
+      this.wavesurfer.on('ready', function () {
+        self.hasLoaded = true;
+        if (!!self.initialLoad) {
+          self.initialLoad = false;
+        } else {
+          self.wavesurfer.play();
+        }
+        document.querySelector('.track-time .elapsed').innerHTML = '00:00';
+        document.querySelector('.track-time .remaining').innerHTML = self.toHHMMSS(self.wavesurfer.getDuration());
+
+        if (self.expandedPlayerActive) {
+          self.updateExpandedPlayerProgress();
+        }
+      });
+
+      this.wavesurfer.on('error', function (e) {
+        console.warn(e);
+      });
+
+      this.wavesurfer.on('finish', function () {
+        self.setCurrentSong((self.currentTrack + 1) % self.links.length);
+      });
+    },
+
+    setCurrentSong: function setCurrentSong(index) {
+      if (index != this.currentTrack || !this.hasLoaded) {
+        this.links[this.currentTrack].classList.remove('active');
+
+        this.currentTrack = index;
+        this.currentTrackData = this.links[this.currentTrack].dataset;
+
+        this.links[this.currentTrack].classList.add('active');
+
+        document.querySelector('.track-title').innerHTML = this.currentTrackData.title;
+        document.querySelector('.track-artist').innerHTML = this.currentTrackData.artist;
+        document.querySelector('.track-tuning').innerHTML = this.currentTrackData.tuning;
+        document.querySelector('.track-bpm').innerHTML = this.currentTrackData.bpm;
+
+        var fill = document.querySelector('#mobile-progress-fill');
+        if (fill) fill.style.width = '0%';
+
+        this.updateMediaSessionMetadata();
+        this.updateExpandedPlayerInfo();
+        this.wavesurfer.load(this.currentTrackData.href);
+        this.setupMediaSession();
+      } else {
+        if (!ignoreSilenceModeProcessed) {
+          ignoreSilenceMode();
+        }
+        this.wavesurfer.playPause();
+      }
+    },
+
+    addTrackToCart: function addTrackToCart(variantId, trackId, e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      $.post('/cart/add.json', { quantity: 1, id: variantId }, function (variant) {
+        var els = $('.single-add-track-to-cart-icon-' + trackId);
+        els.each(function (i) {
+          $(this).replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+        });
+        $.get('/cart.json', function (cart) {
+          var cartElem = $('.cart-count-bubble');
+          if (!cartElem) {
+            return;
+          }
+          cartElem.find('span:first-of-type').text(cart.item_count);
+          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
+        });
+      }).fail(function () {
+        alert('Failed to add track to cart!');
+      });
+    },
+
+    addAlbumToCart: function addAlbumToCart(trackId, e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      document.querySelector('form[action="/cart/add"] button[id="AddToCart"]').click();
+      var els = $('.single-add-track-to-cart-icon-' + trackId);
+      els.each(function (i) {
+        $(this).replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+      });
+      setTimeout(
+        $.get('/cart.json', function (cart) {
+          var cartElem = $('.cart-count-bubble');
+          if (!cartElem) {
+            return;
+          }
+          cartElem.find('span:first-of-type').text(cart.item_count);
+          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
+        }),
+        1000
+      );
+    },
+
+    toHHMMSS: function toHHMMSS(secs) {
+      var sec_num = parseInt(secs, 10);
+      var hours = Math.floor(sec_num / 3600);
+      var minutes = Math.floor(sec_num / 60) % 60;
+      var seconds = sec_num % 60;
+      return [hours, minutes, seconds]
+        .map((v) => (v < 10 ? '0' + v : v))
+        .filter((v, i) => v !== '00' || i > 0)
+        .join(':');
+    },
+
+    init: function () {
+      this.addEventListeners();
+      this.addWavesurferListeners();
+      this.setupMediaSession();
+    },
+  };
+
+  singleAlbumPlayer.init();
+</script>
+
+{% schema %}
+{
+  "name": "Audio Player",
+  "settings": [
+    {
+      "type": "color",
+      "id": "player_bg",
+      "label": "Player Background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "wave_color",
+      "label": "Wave Color",
+      "default": "#444444"
+    },
+    {
+      "type": "color",
+      "id": "progress_color",
+      "label": "Progress Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "btn_bg",
+      "label": "Button Background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "btn_text",
+      "label": "Button Text",
+      "default": "#000000"
+    }
+  ]
+}
+{% endschema %}

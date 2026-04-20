@@ -1,0 +1,60 @@
+<div id="collection-container">
+  {% for product in collection.products %}
+    {% assign product_type = product.title | downcase %}
+    {% assign is_hoodie = false %}
+    {% if product_type contains 'hoodie' %}
+      {% assign is_hoodie = true %}
+    {% endif %}
+
+    {% if forloop.first == true %}
+      <div id="collection-title">{{ product.title }}</div>
+    {% endif %}
+
+    <a href="{{ product.url | within: collection }}">
+      {% if product.available and is_hoodie == false %}
+        <div id="piece">
+      {% else %}
+        <div id="piece" class="soldout">
+      {% endif %}
+
+        {% if is_hoodie or product.available == false %}
+          <div class="soldout">sold out</div>
+        {% endif %}
+
+        {% assign image_count = 0 %}
+        {% for image in product.images %}
+            <img class="split" src="{{ image.src | img_url: 'x800' }}" alt="{{ image.alt | escape }}">
+            {% assign image_count = image_count | plus: 1 %}
+            {% if image_count >= 2 %}{% break %}{% endif %}
+        {% endfor %}
+
+      </div>
+    </a>
+
+    {% else %}
+      <p>no matches</p>
+  {% endfor %}
+  {% if paginate.pages > 1 %}
+    {{ paginate | default_pagination }}
+  {% endif %}
+</div>
+
+<style>
+#piece.soldout {
+  opacity: 0.7;
+  position: relative;
+}
+
+.soldout {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  z-index: 10;
+}
+</style>

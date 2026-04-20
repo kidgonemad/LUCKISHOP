@@ -1,0 +1,15 @@
+BACKUP_ORIGINAL/
+luckivault-shop/
+VINYL SLEEVES/
+COVERS (FONT AND BACK)/
+newest theme version/
+caution-doodle/
+Untitled/
+node_modules/
+
+*.v2.glb
+*.v3.glb
+*.v4.glb
+*.log
+.DS_Store
+Thumbs.db

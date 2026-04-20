@@ -1,0 +1,422 @@
+<div id="cart-container">
+
+  {% if cart.item_count > 0 %}
+
+    <form action="/cart" method="post" novalidate>
+
+      <!-- <table>
+        <tbody> -->
+
+          {% for item in cart.items %}
+            <div class="cart-item">
+              <div class="cart-item-left">
+                <a href="{{ item.url | within: collections.all }}">
+                  <img class="cart-item-thumbnail" src="{{ item | img_url: 'medium' }}" alt="{{ item.title | escape }}">
+                </a>
+              </div>
+              <div class="cart-item-info">
+                <div class="cart-item-title">{{ item.product.title }} ({{ item.quantity }})</div>
+                <div class="cart-item-variant">{{ item.variant.title }}</div>
+                <div class="cart-item-price">{{ item.line_price | money }}</div>
+                <a href="/cart/change?line={{ forloop.index }}&amp;quantity=0">
+                  <div class="cart-item-remove">remove</div>
+                </a>
+              </div>
+            </div>
+
+
+            <!-- <tr>
+              <td>
+                <a href="{{ item.url | within: collections.all }}">
+                  <img src="{{ item | img_url: 'medium' }}" alt="{{ item.title | escape }}">
+                </a>
+              </td>
+              <td>
+                <a href="{{ item.url }}">{{ item.product.title }}</a>
+                {{ item.variant.title }}
+                <a href="/cart/change?line={{ forloop.index }}&amp;quantity=0">remove</a>
+              </td>
+              <td>{{ item.price | money }}</td>
+              <td>
+                <input type="number" name="updates[]" id="updates_{{ item.key }}" value="{{ item.quantity }}" min="0">
+              </td>
+              <td>
+                {% if item.original_line_price != item.line_price %}{{ item.original_line_price | money }}{% endif %}
+                {{ item.line_price | money }}
+                {% for discount in item.discounts %}{{ discount.title }}{% endfor %}
+              </td>
+            </tr> -->
+
+          <!-- </div> -->
+          {% endfor %}
+
+
+        <!-- </tbody>
+      </table> -->
+
+
+      <div id="cart-footer">
+        <div id="subtotal">
+          <div id="subtotal-title">Subtotal</div>
+          <div id="subtotal-amount">{{ cart.total_price | money }}</div>
+        </div>
+        
+        <div id="cart-buttons">
+          <div class="route-div" disable-reorder></div>
+          {% if settings.preorder_conf_enabled == true %}
+            {% assign cartPre = false %}
+            {% for item in cart.items %}
+              {% assign product = item.product %}
+              {% for tag in product.tags %}
+                {% if tag == "pre-order" %}
+                  {% assign cartPre = true %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            
+            {% if cartPre == true %}
+              <button id="pseudo" type="button" onclick="pseudoCheckout()">Checkout</button>
+            {% else %}
+              <button type="submit" name="checkout">Checkout</button>
+            {% endif %}
+          {% else %}
+            <button type="submit" name="checkout">Checkout</button>
+          {% endif %}
+        </div>
+      </div>
+
+    </form>
+
+  {% else %}
+    <div id="empty-cart">Cart is empty...</div>
+
+  {% endif %}
+
+
+  {% if settings.preorder_conf_enabled == true %}
+
+    <script>
+      function pseudoCheckout(){
+        document.getElementById('pseudo-popup').style.display = 'block';
+      }
+      
+      function cancelPP(){
+        document.getElementById('pseudo-popup').style.display = 'none';
+      }
+      
+    </script>
+  
+  {% endif %}
+
+</div>
+
+<script>
+(function() {
+  if (window.location.search.indexOf('tune=1') === -1) return;
+
+  var panel = document.createElement('div');
+  panel.id = 'cart-tuner';
+  panel.innerHTML = `
+    <div id="cart-tuner-panel" style="position:fixed;bottom:10px;left:10px;background:black;color:white;padding:15px;border-radius:8px;z-index:99999;font-family:monospace;font-size:12px;max-height:90vh;overflow-y:auto;width:320px;cursor:grab;">
+      <div style="font-size:14px;font-weight:bold;margin-bottom:10px;">CART TUNER</div>
+
+      <label>Cart Item Margin Bottom: <span id="v-item-mb">40</span>px</label><br>
+      <input type="range" min="0" max="200" value="40" oninput="document.querySelectorAll('.cart-item').forEach(e=>e.style.marginBottom=this.value+'px');document.getElementById('v-item-mb').textContent=this.value"><br><br>
+
+      <label>Cart Item Padding Bottom: <span id="v-item-pb">40</span>px</label><br>
+      <input type="range" min="0" max="200" value="40" oninput="document.querySelectorAll('.cart-item').forEach(e=>e.style.paddingBottom=this.value+'px');document.getElementById('v-item-pb').textContent=this.value"><br><br>
+
+      <label>Cart Item Gap (image↔info): <span id="v-item-gap">30</span>px</label><br>
+      <input type="range" min="0" max="100" value="30" oninput="document.querySelectorAll('.cart-item').forEach(e=>e.style.gap=this.value+'px');document.getElementById('v-item-gap').textContent=this.value"><br><br>
+
+      <label>Image Size: <span id="v-img-size">200</span>px</label><br>
+      <input type="range" min="50" max="400" value="200" oninput="document.querySelectorAll('.cart-item-left').forEach(e=>{e.style.width=this.value+'px';e.style.height=this.value+'px';e.style.flex='0 0 '+this.value+'px'});document.getElementById('v-img-size').textContent=this.value"><br><br>
+
+      <label>Title Font Size: <span id="v-title-fs">50</span>px</label><br>
+      <input type="range" min="10" max="80" value="50" oninput="document.querySelectorAll('.cart-item-title').forEach(e=>e.style.fontSize=this.value+'px');document.getElementById('v-title-fs').textContent=this.value"><br><br>
+
+      <label>Variant Font Size: <span id="v-var-fs">40</span>px</label><br>
+      <input type="range" min="10" max="80" value="40" oninput="document.querySelectorAll('.cart-item-variant').forEach(e=>e.style.fontSize=this.value+'px');document.getElementById('v-var-fs').textContent=this.value"><br><br>
+
+      <label>Price Font Size: <span id="v-price-fs">42</span>px</label><br>
+      <input type="range" min="10" max="80" value="42" oninput="document.querySelectorAll('.cart-item-price').forEach(e=>e.style.fontSize=this.value+'px');document.getElementById('v-price-fs').textContent=this.value"><br><br>
+
+      <label>Remove Font Size: <span id="v-rm-fs">46</span>px</label><br>
+      <input type="range" min="10" max="80" value="46" oninput="document.querySelectorAll('.cart-item-remove').forEach(e=>e.style.fontSize=this.value+'px');document.getElementById('v-rm-fs').textContent=this.value"><br><br>
+
+      <label>Subtotal Font Size: <span id="v-sub-fs">30</span>px</label><br>
+      <input type="range" min="10" max="80" value="30" oninput="document.querySelectorAll('#subtotal-title,#subtotal-amount').forEach(e=>e.style.fontSize=this.value+'px');document.getElementById('v-sub-fs').textContent=this.value"><br><br>
+
+      <label>Cart Footer Margin Top: <span id="v-cf-mt">40</span>px</label><br>
+      <input type="range" min="0" max="300" value="40" oninput="document.getElementById('cart-footer').style.marginTop=this.value+'px';document.getElementById('v-cf-mt').textContent=this.value"><br><br>
+
+      <label>Cart Footer Padding Bottom: <span id="v-cf-pb">0</span>px</label><br>
+      <input type="range" min="0" max="300" value="0" oninput="document.getElementById('cart-footer').style.paddingBottom=this.value+'px';document.getElementById('v-cf-pb').textContent=this.value"><br><br>
+
+      <label>Cart Container Padding: <span id="v-cc-p">20</span>px</label><br>
+      <input type="range" min="0" max="100" value="20" oninput="document.getElementById('cart-container').style.padding=this.value+'px';document.getElementById('v-cc-p').textContent=this.value"><br><br>
+
+      <button onclick="
+        var vals = 'Cart Item Margin Bottom: '+document.getElementById('v-item-mb').textContent+'px\\n'+
+        'Cart Item Padding Bottom: '+document.getElementById('v-item-pb').textContent+'px\\n'+
+        'Cart Item Gap: '+document.getElementById('v-item-gap').textContent+'px\\n'+
+        'Image Size: '+document.getElementById('v-img-size').textContent+'px\\n'+
+        'Title Font Size: '+document.getElementById('v-title-fs').textContent+'px\\n'+
+        'Variant Font Size: '+document.getElementById('v-var-fs').textContent+'px\\n'+
+        'Price Font Size: '+document.getElementById('v-price-fs').textContent+'px\\n'+
+        'Remove Font Size: '+document.getElementById('v-rm-fs').textContent+'px\\n'+
+        'Subtotal Font Size: '+document.getElementById('v-sub-fs').textContent+'px\\n'+
+        'Cart Footer Margin Top: '+document.getElementById('v-cf-mt').textContent+'px\\n'+
+        'Cart Footer Padding Bottom: '+document.getElementById('v-cf-pb').textContent+'px\\n'+
+        'Cart Container Padding: '+document.getElementById('v-cc-p').textContent+'px';
+        navigator.clipboard.writeText(vals);this.textContent='COPIED!';setTimeout(()=>this.textContent='COPY VALUES',1500);
+      " style="background:#ff6ec7;color:black;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;font-weight:bold;width:100%;">COPY VALUES</button>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  var p = document.getElementById('cart-tuner-panel');
+  var drag = false, offX, offY;
+  p.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    drag = true; offX = e.clientX - p.getBoundingClientRect().left; offY = e.clientY - p.getBoundingClientRect().top;
+  });
+  document.addEventListener('mousemove', function(e) { if (!drag) return; p.style.left = (e.clientX - offX) + 'px'; p.style.top = (e.clientY - offY) + 'px'; p.style.bottom = 'auto'; });
+  document.addEventListener('mouseup', function() { drag = false; });
+  p.addEventListener('touchstart', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    drag = true; var t = e.touches[0]; offX = t.clientX - p.getBoundingClientRect().left; offY = t.clientY - p.getBoundingClientRect().top;
+  }, {passive: true});
+  document.addEventListener('touchmove', function(e) { if (!drag) return; var t = e.touches[0]; p.style.left = (t.clientX - offX) + 'px'; p.style.top = (t.clientY - offY) + 'px'; p.style.bottom = 'auto'; }, {passive: true});
+  document.addEventListener('touchend', function() { drag = false; });
+})();
+</script>
+
+<style>
+  body {
+    height: auto !important;
+    min-height: 100% !important;
+  }
+
+  main {
+    margin-top: -109.68px !important;
+    padding-top: 36.37px !important;
+  }
+
+  #cart-container {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: 80px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    padding: 10px;
+    gap: 30px;
+    position: relative;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 78px;
+    margin-bottom: 40px;
+  }
+
+  .cart-item-left {
+    flex: 0 0 200px;
+    position: relative;
+    width: 200px;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .cart-item-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .cart-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cart-item-title,
+  .cart-item-variant,
+  .cart-item-price {
+    font-family: 'gog-regular', monospace;
+    font-weight: bold !important;
+    color: black;
+    margin: 0;
+    text-shadow: none;
+  }
+
+  .cart-item-title {
+    font-size:50px !important;
+  }
+
+  .cart-item-variant {
+    font-size:40px !important;
+    opacity: 1;
+  }
+
+  .cart-item-price {
+    font-size:42px !important;
+  }
+
+  .cart-item-remove {
+    font-family: 'gog-regular', monospace;
+    background: #ff6ec7;
+    color: black;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size:46px !important;
+    display: inline-block;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .cart-item-remove:hover {
+    opacity: 0.9;
+  }
+
+  #cart-footer {
+    margin-top: 50px !important;
+    padding-top: 20px;
+    background: transparent;
+  }
+
+  #subtotal {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-family: 'gog-regular', monospace;
+    color: white;
+    background: transparent;
+  }
+
+  #cart-buttons {
+    width: 100%;
+  }
+
+  /* Remove hover effect since it's not in the image */
+  #cart-buttons button:hover {
+    opacity: 1;
+  }
+
+  #empty-cart {
+    text-align: center;
+    font-family: 'gog-regular', monospace;
+    color: black;
+    font-size:40px !important;
+    margin: 200px 0;
+  }
+
+  .route-div {
+    margin: 20px 0;
+  }
+
+  /* Popup styles */
+  #pseudo-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1000;
+  }
+
+  #pp-content {
+    font-family: 'gog-regular', monospace;
+    color: black;
+  }
+
+  #pp-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  #pp-buttons button {
+    flex: 1;
+    background: #ff6ec7;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    font-family: 'gog-regular', monospace;
+    cursor: pointer;
+  }
+
+  /* Remove any backgrounds from the form and container */
+  #cart-container form,
+  #cart-footer,
+  #cart-footer > div,
+  #cart-buttons {
+    background: transparent;
+  }
+
+  /* First, ensure all containers are transparent */
+  #cart-container,
+  #cart-container form,
+  #cart-footer,
+  #cart-footer > div,
+  #cart-buttons,
+  .route-div {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Style the button exactly like the image */
+  #cart-buttons button {
+    width: 100% !important;
+    background: #black !important;
+    border: none !important;
+    border-radius: 50px !important;
+    padding: 3px 12px !important;
+    font-family: 'gog-regular', monospace !important;
+    font-size:40px !important;
+    cursor: pointer !important;
+    color: white !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  /* Remove any Route widget backgrounds */
+  .route-div,
+  .pw-route-protection,
+  .pw-container {
+    background: transparent !important;
+  }
+
+  @media (max-width: 768px) {
+                                                                                              
+          #cart-container .cart-item {                                                                               
+             padding-bottom: 40px;
+             gap: 17px;
+             height: auto !important;
+          }
+      
+                                                                                       
+       #cart-container .cart-item .cart-item-remove {                                                             
+       position: static !important;
+       bottom: auto !important;                                                                                 
+       right: auto !important; 
+       }
+  }
+</style>

@@ -1,0 +1,33 @@
+{% layout 'theme' %}
+
+<div class="page-width">
+  {{ page.content }}
+</div>
+
+{% if template contains 'page.music' or page.handle == 'music' %}
+  {% section 'page-music' %}
+{% endif %}
+
+{% if template contains 'page.tour' or page.handle == 'tour' %}
+  {% section 'page-tour' %}
+{% endif %}
+
+{% if template contains 'page.shop' or page.handle == 'shop' %}
+  {% section 'page-shop' %}
+{% endif %}
+
+{% if template contains 'page.privacy-policy' or page.handle == 'privacy-policy' %}
+  {% section 'page-privacy-policy' %}
+{% endif %}
+
+{% if template contains 'page.cookies' or page.handle == 'cookies' %}
+  {% section 'page-cookies' %}
+{% endif %}
+
+{% if template contains 'page.personal-information' or page.handle == 'personal-information' %}
+  {% section 'page-personal-information' %}
+{% endif %}
+
+{% if template contains 'page.shipping-return-policy' or page.handle == 'shipping-return-policy' %}
+  {% section 'page-shipping-return-policy' %}
+{% endif %}

@@ -1,0 +1,191 @@
+{% comment %}
+  <!--
+  Copyright (c) 2022 Single Media, Inc - ALL RIGHTS RESERVED
+
+  NOTICE:  All information contained herein is, and remains the property of Single Media, Inc
+  and its suppliers, if any. The intellectual and technical concepts contained herein are
+  proprietary to Single Media, Inc and its suppliers and may be covered by U.S. and Foreign Patents,
+  patents in process, and are protected by trade secret or copyright law. Dissemination of this
+  information or reproduction of this material is strictly forbidden unless prior
+  written permission is obtained from Single Media, Inc.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  -->
+{% endcomment %}
+
+{% comment %}
+  <!-- Single Default Styles - Can be edited in assets/single.css -->
+{% endcomment %}
+{{ 'single-base.css' | asset_url | stylesheet_tag }}
+{{ 'single-video.css' | asset_url | stylesheet_tag }}
+
+<div class="single-video-wrap {% if preview_enabled == 'true' %}preview{% endif %}">
+{% if max_width == 'true' %}
+  <div class="page-width">
+    {% endif %}
+
+    {% if preview_enabled == 'true' %}
+      <div class="video-overlay" style="background-image: url('{{ video_thumbnail }}')">
+        <div class="no-access">
+          {% render 'single-icon-lock-square' %}
+          <h2>You do not have access to this video</h2>
+        </div>
+      </div>
+    {% else %}
+      <div
+              id="single-livestream-player{{ section_id }}"
+              class="
+        single-video-player
+        {% if chat_enabled == 'false' %}chat-disabled{% endif %}
+        {% if doors != 'OPEN' %}doors-closed{% endif %}
+      "
+      >
+        <script
+                src="https://{{ video_host }}/assets/livestream-embed.js?id={{ video_id }}&customerEmail={{ customer.email }}{% if customer_wallet %}&customerId={{ customer_wallet }}{% endif %}&sectionId={{ section_id }}&chatEnabled={{ chat_enabled }}{% if bypass_token %}&token={{ bypass_token }}&soundcheck=true{% endif %}{% unless shop.metafields.single_inc.whitelabel_enabled.value == true %}&watermark=true{% endunless %}"
+                type="text/javascript"
+        ></script>
+      </div>
+
+      {% render 'single-chat-modal',
+              background_color: 'rgba(255,255,255,0.9)',
+              font_color: '#000000',
+              login_url: login_url,
+              register_url: register_url
+      %}
+    {% endif %}
+
+    {% if max_width == 'true' %}
+  </div>
+  {% endif %}
+</div>
+
+{% if show_title == 'true' or show_artist == 'true' or show_description == 'true' %}
+  <div class="single-video-info page-width">
+    <div class="single-video-header">
+      <div class="single-go-back" onclick="goBack()">
+        <span>← Back</span>
+      </div>
+      <div class="single-video-share"
+           onclick="share(event)">
+        {% render 'single-icon-share' %}
+        <span>Share</span>
+        <span id="single-tooltip-{{ video_id }}"
+              class="single-share-tooltip">
+          Copied!
+        </span>
+      </div>
+    </div>
+    {% if show_title == 'true' %}
+      <div class="single-video-title-wrapper">
+        <div class="{{ title_size }} single-video-title">{{ video_title }}</div>
+      </div>
+    {% endif %}
+    {% if show_artist == 'true' %}
+      <div class="{{ artist_size }} single-video-artist">{{ video_artist }}</div>
+    {% endif %}
+    {% if show_description == 'true' and video_description %}
+      <div class="single-video-description-wrapper collapsed">
+        <div id="single-video-description">
+          {{
+          video_description
+          | replace: '&amp;', '&'
+          | replace: '&lt;', '<'
+          | replace: '&gt;', '>'
+          | replace: '&quot;', '"'
+          | replace: '&nbsp;', ' '
+          }}
+        </div>
+      </div>
+      <p class="single-video-toggle-description" onclick="readMore()">Read More</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+<script>
+  const dispatchVideoId = () => {
+    document.dispatchEvent(new CustomEvent('video:loaded', { detail: '{{ video_id }}' }));
+  };
+
+  dispatchVideoId(); // Trigger on load
+  document.addEventListener('video:requested', dispatchVideoId); // Listen for requests
+
+  /*------------------------------------
+  | Go Back
+  ------------------------------------*/
+  const goBackEl = document.querySelector('.single-go-back');
+
+  if (
+          document.referrer.includes('/apps/single/v2/my-perks') ||
+          document.referrer.includes('/apps/single/memberships') ||
+          document.referrer.includes('/apps/single/membership')
+  ) {
+    goBackEl.style.display = 'block';
+  }
+
+  const goBack = () => window.history.back();
+
+  /*------------------------------------
+  | Share
+  ------------------------------------*/
+  const isMobileDevice = () => {
+    return /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+  }
+
+  const share = (event) => {
+    event.preventDefault();
+
+    const url = window.location.href;
+    if (navigator.share && isMobileDevice()) {
+      navigator.share({
+        title: "{{ video_title }}",
+        url
+      })
+              .then(() => console.log('Successfully shared'))
+              .catch((error) => console.log('Error sharing:', error));
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url)
+              .then(() => showTooltip())
+              .catch(err => console.log('Failed to copy: ', err));
+    } else {
+      alert('Your browser does not support sharing or clipboard features.');
+    }
+  }
+
+  const showTooltip = () => {
+    const tooltip = document.getElementById(`single-tooltip-{{ video_id }}`);
+    tooltip.classList.add('show');
+
+    // Hide the tooltip after 2 seconds
+    setTimeout(() => {
+      tooltip.classList.remove('show');
+    }, 2000);
+  }
+
+  /*------------------------------------
+  | Read More / Less
+  ------------------------------------*/
+  let expanded = false;
+
+  setTimeout(() => {
+    const wrapper = document.querySelector('.single-video-description-wrapper');
+    const desc = document.getElementById('single-video-description');
+    const toggleDesc = document.querySelector('.single-video-toggle-description');
+    const isOverflowing = desc.scrollHeight > wrapper.clientHeight;
+    toggleDesc.style.display = isOverflowing ? 'block' : 'none';
+  }, 50);
+
+  const readMore = () => {
+    const wrapper = document.querySelector('.single-video-description-wrapper');
+    const toggleDesc = document.querySelector('.single-video-toggle-description');
+
+    expanded = !expanded;
+    wrapper.classList.toggle('expanded', expanded);
+    toggleDesc.textContent = expanded ? 'Read Less' : 'Read More';
+  };
+</script>
