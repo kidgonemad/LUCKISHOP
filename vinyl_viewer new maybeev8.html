@@ -950,10 +950,7 @@ function loadGLBFile(type, file) {
     if(entries.some(e=>e.isIntersecting)){
       started = true;
       obs.disconnect();
-      // A/B compare: append `?og=1` to the page URL to load the original uncompressed CD GLB
-      const _useOgCD = new URLSearchParams(location.search).get('og') === '1';
-      const _cdUrl = _useOgCD ? 'DRB CD ONE (Setup) - ANIMATION.glb' : 'cd.v2.glb';
-      fetch(_cdUrl)
+      fetch('cd.v2.glb')
         .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
         .then(buf=>loadGLBBuffer('cd', buf))
         .catch(e=>console.warn('CD GLB load failed:', e));
