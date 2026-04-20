@@ -179,14 +179,16 @@ body.dev-mode #ctrlPanel.open{display:flex!important}
 body.dev-mode #reskinPanel{display:block!important}
 body.dev-mode #reskinPanel.open{transform:translateX(0)!important}
 
-/* Shop + product iframe modes: parent Shopify page owns the announcement bar, header, cart.
+/* Shop + product iframe modes: parent Shopify page owns the announcement bar, header, cart, footer.
    Hide the iframe's duplicate chrome to avoid stacking them. */
 body.shop-mode .announcement-bar,
 body.shop-mode .top-header,
 body.shop-mode #cart,
+body.shop-mode .site-footer,
 body.product-mode .announcement-bar,
 body.product-mode .top-header,
-body.product-mode #cart{display:none!important}
+body.product-mode #cart,
+body.product-mode .site-footer{display:none!important}
 body.shop-mode main{margin-top:0!important}
 
 /* Product mode also hides the grid + modal chrome (parent has title/price/etc). */
