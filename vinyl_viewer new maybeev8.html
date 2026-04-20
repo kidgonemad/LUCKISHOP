@@ -2138,6 +2138,14 @@ if(_mode === 'product' && _prodHandle){
 // Signal ready to the parent page so it can time its own init
 window.addEventListener('load', () => _postToParent({action:'ready', mode: _mode || 'standalone', product: _prodHandle || null}));
 
+// Register Service Worker — cache-on-demand for GLBs, textures, three.js.
+// First visit loads normally; subsequent visits (same or different page embedding the iframe) hit cache.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('[viewer] SW registration failed:', err));
+  });
+}
+
 // Report iframe content height so parent can size the iframe to fit (avoids nested scrollbars).
 // Product-mode: parent controls dimensions, no resize needed. Shop-mode: grid height varies.
 if(_inIframe && _mode === 'shop'){
