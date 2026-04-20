@@ -172,6 +172,43 @@ main{position:relative;width:100%;margin-top:-45px}
 .footer-copyright a:hover{opacity:.7}
 
 /* ── RESKIN PANEL ── */
+/* Dev-only UIs — hidden in production iframe. Show with ?dev=1 URL param if needed for tuning. */
+#ctrlBtn,#ctrlPanel,#reskinPanel,#reskinKey{display:none!important}
+body.dev-mode #ctrlBtn,body.dev-mode #reskinKey{display:flex!important}
+body.dev-mode #ctrlPanel.open{display:flex!important}
+body.dev-mode #reskinPanel{display:block!important}
+body.dev-mode #reskinPanel.open{transform:translateX(0)!important}
+
+/* Shop + product iframe modes: parent Shopify page owns the announcement bar, header, cart.
+   Hide the iframe's duplicate chrome to avoid stacking them. */
+body.shop-mode .announcement-bar,
+body.shop-mode .top-header,
+body.shop-mode #cart,
+body.product-mode .announcement-bar,
+body.product-mode .top-header,
+body.product-mode #cart{display:none!important}
+body.shop-mode main{margin-top:0!important}
+
+/* Product mode also hides the grid + modal chrome (parent has title/price/etc). */
+body.product-mode #items,
+body.product-mode main{display:none!important}
+body.product-mode #modal{background:transparent!important;display:block!important;opacity:1!important;position:relative!important;inset:auto!important}
+body.product-mode .modal-close,
+body.product-mode .modal-title,
+body.product-mode .modal-price,
+body.product-mode .modal-add-btn,
+body.product-mode .modal-details,
+body.product-mode .modal-support,
+body.product-mode .modal-preorder,
+body.product-mode .modal-features,
+body.product-mode .modal-right{display:none!important}
+body.product-mode .modal-inner{padding:0!important;max-width:none!important;height:100vh}
+body.product-mode .modal-left{width:100%!important;padding:0!important;margin:0!important;height:100%}
+body.product-mode .modal-canvas-wrap{height:100%}
+body.product-mode #modalCanvas{max-height:none!important;height:100%!important;aspect-ratio:auto!important}
+body.product-mode html,body.product-mode body{height:100%;overflow:hidden}
+body.product-mode .modal-vinyl-btn{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:auto;padding:10px 20px;background:rgba(255,255,255,.9);z-index:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
 #reskinPanel{position:fixed;right:0;top:20px;bottom:0;z-index:300;
   background:rgba(0,0,0,0.92);border-left:1px solid #333;width:220px;
   display:none;flex-direction:column;overflow-y:auto;padding:14px;
@@ -528,6 +565,23 @@ main{position:relative;width:100%;margin-top:-45px}
 <script src="assets/three-r128/OrbitControls.js"></script>
 <script src="assets/three-r128/meshopt_decoder.js"></script>
 <script>
+// ── URL PARAM MODES (Phase 7 iframe integration) ─────────────────────────
+// ?mode=shop       → full grid; card click posts {action:'navigate', url} to parent; no modal
+// ?mode=product&product=<handle> → grid+chrome hidden, auto-open modal for that product,
+//                                    only canvas + OPEN VINYL visible (parent page owns the rest)
+// ?dev=1           → show the gear button + reskin panel for local tuning
+// (no params)      → original standalone behavior: grid + modal
+const _params = new URLSearchParams(location.search);
+const _mode = _params.get('mode');          // 'shop' | 'product' | null
+const _prodHandle = _params.get('product'); // product handle, or null
+const _inIframe = window.parent !== window;
+function _postToParent(msg){ if(_inIframe) window.parent.postMessage(msg, '*'); }
+function _urlToHandle(u){ const m = u && u.match(/\/products\/([^/?#]+)/); return m ? m[1] : null; }
+
+if(_params.get('dev')==='1') document.body.classList.add('dev-mode');
+if(_mode==='shop') document.body.classList.add('shop-mode');
+if(_mode==='product' && _prodHandle) document.body.classList.add('product-mode');
+
 // ── PRODUCTS ──────────────────────────────────────────────────────────────
 const PRODUCTS = [
   {name:"Dr*gs R Bad - Signed Escape Vinyl",   price:"$60.00", type:"vinyl", url:"https://www.luckivault.com/products/dr-gs-r-bad-signed-vinyl-escape",    variantId:"48602867630309", variant:"SIGNED ESCAPE VINYL"},
@@ -844,32 +898,50 @@ function fitCameraToModel(sc, padding){
 // ── BUILD GRID ─────────────────────────────────────────────────────────────
 const grid = document.getElementById('items');
 
+// In product-mode, the grid isn't shown — modal auto-opens for the target product.
+// Still need PRODUCTS.forEach to run to keep matching logic working, but skip building cards we don't need.
+const _buildCards = _mode !== 'product';
+
 PRODUCTS.forEach((prod, idx) => {
+  if(!_buildCards) return;
   const card = document.createElement('a');
   card.href = prod.soldout ? '#' : prod.url;
   if(prod.soldout) card.classList.add('soldout');
+
+  // In iframe + shop mode: intercept card click, ask parent to navigate. Otherwise native <a>.
+  const handleNav = e => {
+    if(prod.soldout){ e.preventDefault(); return; }
+    if(_inIframe){
+      e.preventDefault();
+      _postToParent({action:'navigate', url: prod.url});
+    }
+    // else: native anchor navigation proceeds to prod.url (standalone dev)
+  };
+  card.addEventListener('click', handleNav);
 
   const canvas = document.createElement('canvas');
   canvas.className = 'card-canvas';
   card.appendChild(canvas);
 
-  // Title overlay — clicks open product page
+  // Title overlay — click routes same as card click
   const title = document.createElement('span');
   title.className = 'item-title';
   title.textContent = prod.name;
-  title.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();
-    openModal(idx);
+  title.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    if(_inIframe){ _postToParent({action:'navigate', url: prod.url}); }
+    else { openModal(idx); }
   });
   card.appendChild(title);
 
-  // Price overlay — clicks open product page
+  // Price overlay — click routes same as card click
   const price = document.createElement('span');
   price.className = 'item-price';
   price.textContent = prod.price;
-  price.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();
-    openModal(idx);
+  price.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    if(_inIframe){ _postToParent({action:'navigate', url: prod.url}); }
+    else { openModal(idx); }
   });
   card.appendChild(price);
 
@@ -1287,10 +1359,14 @@ function openModal(idx){
       .catch(e=>console.warn('Modal GLB load failed:', e));
   }
 
-  // OPEN VINYL button: hide for CD (no sleeve) and on mobile (canvas is square via CSS, Layout 2 wide-aspect breaks layout)
+  // OPEN VINYL button: hide for CD (no sleeve). Also hide on mobile in standalone/shop modes
+  // (mobile canvas stays square per CSS). In product-mode the button must show on mobile too —
+  // it's the only interaction in that iframe, and parent page handles layout.
   const vinylBtn=document.querySelector('.modal-vinyl-btn');
   if(vinylBtn){
-    const hideBtn=(prod.type==='cd')||(window.innerWidth<=768);
+    const isCD = prod.type==='cd';
+    const isMobileLayoutCase = _mode !== 'product' && window.innerWidth<=768;
+    const hideBtn = isCD || isMobileLayoutCase;
     vinylBtn.style.display=hideBtn?'none':'';
     vinylBtn.textContent='OPEN VINYL';
   }
@@ -1308,13 +1384,13 @@ function openModal(idx){
 // Modal vinyl toggle — simple button, no event conflicts
 function toggleModalVinyl(){
   if(!modalSC||!modalSC.loaded||modalSC.playing)return;
-  if(modalSC.isOpen){
-    modalSC.playDir=-1;modalSC.playing=true;
-    if(window._pptunerApplyLayout)window._pptunerApplyLayout(1);
-  } else {
-    modalSC.playDir=1;modalSC.playing=true;
-    if(window._pptunerApplyLayout)window._pptunerApplyLayout(2);
-  }
+  const nextLayout = modalSC.isOpen ? 1 : 2;
+  if(modalSC.isOpen){ modalSC.playDir=-1; modalSC.playing=true; }
+  else             { modalSC.playDir= 1; modalSC.playing=true; }
+  // In product-mode, the parent Shopify page drives the layout change; skip internal modal CSS swap.
+  // In standalone/shop modes, the internal modal handles its own Layout 1<->2 transition.
+  if(_mode !== 'product' && window._pptunerApplyLayout) window._pptunerApplyLayout(nextLayout);
+  _postToParent({action:'layout', n: nextLayout});
 }
 
 function addToCart(){
@@ -2046,6 +2122,19 @@ function resetType(type){
   window.addEventListener('keydown',e=>{if(e.key==='t'||e.key==='T'){const modal=document.getElementById('modal');if(modal&&modal.classList.contains('open'))build();}});
 })();
 
+// ── PRODUCT-MODE AUTO-OPEN + READY SIGNAL ────────────────────────────────
+// In product-mode iframe, auto-open the modal for the specified product.
+// The modal auto-fetches its GLB if the cached buffer isn't ready yet.
+if(_mode === 'product' && _prodHandle){
+  const _idx = PRODUCTS.findIndex(p => _urlToHandle(p.url) === _prodHandle);
+  if(_idx >= 0){
+    window.addEventListener('load', () => openModal(_idx));
+  } else {
+    console.warn('[viewer] product-mode: no product matches handle', _prodHandle);
+  }
+}
+// Signal ready to the parent page so it can time its own init
+window.addEventListener('load', () => _postToParent({action:'ready', mode: _mode || 'standalone', product: _prodHandle || null}));
 </script>
 </body>
 </html>
