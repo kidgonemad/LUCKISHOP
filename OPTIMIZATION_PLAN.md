@@ -121,26 +121,42 @@ No `<link rel="preload">`, `<link rel="preconnect">`, or async/defer.
 - Verify `assets/cover-front.png` (6.3MB) and `assets/cover-back.png` (6.5MB) are actually used; delete if not
 - Confirm `BACKUP_ORIGINAL/`, `VINYL SLEEVES/`, `COVERS/`, `luckivault-shop/node_modules` excluded from Shopify upload
 
-### Phase 1 — GLB compression (biggest single win)
-**Tool:** `gltfpack` (or `gltf-transform`) — needs Node/npm
-**Approach:** work on copies (`cd.v2.glb`, `vinyl.v2.glb`), originals untouched
+### Phase 1 — GLB compression (biggest single win) ✓ done 2026-04-20
 
-Conservative first pass (no mesh decimation):
-```
-gltfpack -i "DRB CD ONE.glb" -o cd.v2.glb -cc -tc -tq 8
-gltfpack -i vinyl_animation.glb -o vinyl.v2.glb -cc -tc -tq 8
+**Tool used:** native `gltfpack.exe` v1.1 (downloaded from zeux/meshoptimizer releases, placed in `.tools/` — gitignored). The npm `gltfpack` package on Node does *not* include BasisU support.
+
+**Final recipes (after hitting two gotchas — see below):**
+
+```bash
+# CD — no variant textures, safe to mesh-compress
+gltfpack -i "DRB CD ONE (Setup) - ANIMATION.glb" -o cd.v2.glb -cc -tw -tq 8
+
+# Vinyl — has runtime variant texture swaps, MUST NOT quantize mesh
+gltfpack -i vinyl_animation.glb -o vinyl.v2.glb -tw -tq 8 -kn -km -noq
 ```
 
-If visual quality holds, aggressive pass:
-```
-gltfpack -i "DRB CD ONE.glb" -o cd.v3.glb -cc -tc -tq 8 -si 0.5
-```
+**Code change landed:** added a single `<script>` for `meshopt_decoder.js` (r128 UMD), and a `getConfiguredGLTFLoader()` helper that calls `loader.setMeshoptDecoder(MeshoptDecoder)`. No KTX2Loader wiring needed.
 
-**Code change:** add MeshoptDecoder + KTX2Loader to GLTFLoader
+**Results:**
+- CD: 90.1 MB → 9.3 MB (89.7% reduction)
+- Vinyl: 10.1 MB → 2.3 MB (77.7% reduction)
+- **Combined: 100.2 MB → 11.6 MB (88% reduction)**
 
-**Expected:**
-- vinyl: 9.6 MB → ~1.5 MB
-- CD: 90 MB → ~5 MB (assuming mesh simplifies cleanly)
+Plan aspiration was vinyl ~1.5 MB; we're 0.8 MB over because we had to disable mesh quantization. Not pursued further — the variant-texture constraint makes it risky, and the remaining 0.8 MB is a small fraction of total page weight. Revisit if needed later with `-vtf` (float UVs) or `-vt 16` (high-precision UV quantization).
+
+#### Gotcha 1 — KTX2Loader doesn't exist as UMD in r128
+
+Plan's original recipe used `-tc` (KTX2 texture compression) with `KTX2Loader`. The `<script>` tag `https://unpkg.com/three@0.128.0/examples/js/loaders/KTX2Loader.js` returns **404** — KTX2Loader only exists as ESM (`examples/jsm/…`) in r128, not UMD. Mixing ESM+UMD on r128 is a Phase-3 modernization problem, not a Phase-1 compression problem.
+
+**Resolution:** switched compression to `-tw` (WebP textures). WebP is natively supported by r128's `GLTFLoader` via `EXT_texture_webp` — zero extra loaders. Slightly larger file sizes than KTX2 (2-3 MB difference for CD), but zero integration complexity. Revisit KTX2 in Phase 3 when the loader stack is ESM-native.
+
+#### Gotcha 2 — `-cc` mesh quantization breaks runtime texture swaps
+
+Vinyl textures displayed as "zoomed / warped" after compression. Root cause: `-cc` applies 12-bit quantization to texture coordinates by default. When `applyVariantTextures()` swaps in a hand-authored PNG (which assumes the *original* UV layout), the quantized UVs map the image incorrectly.
+
+**Resolution:** for GLBs that have runtime texture swaps, use `-noq` (disable all quantization) and omit `-cc`. Keep `-kn -km` to preserve mesh/material names so `applyVariantTextures` can still find them by name.
+
+**Rule of thumb:** if a GLB has runtime `mat.map` swaps (variant textures, user reskins), don't quantize the mesh. For "static" GLBs (like CD), `-cc` is fine.
 
 ### Phase 2 — Lazy load + memory hygiene (1 hr)
 - Load vinyl GLB immediately (used by 9 cards)
@@ -314,10 +330,10 @@ Flip a query param, don't redeploy.
 
 0. **Section 16** — Modal Layout 2 fix (UI bug, run first, ~45 min) ✓ done
 0.5. **Section 17** — Variant texture preload (pre-flight visual bug) ✓ done
-1. **Phase 0** — file hygiene (no risk)
-2. **Phase 1** — gltfpack on CD GLB only, conservative pass first
-3. Stop, compare visually + measure file size
-4. If good → gltfpack on vinyl GLB
+1. **Phase 0** — file hygiene (no risk) ✓ done
+2. **Phase 1** — gltfpack on CD GLB only, conservative pass first ✓ done
+3. Stop, compare visually + measure file size ✓ done
+4. If good → gltfpack on vinyl GLB ✓ done
 5. **Phase 2** — lazy load + memory drop
 6. **Phase 3** — self-host Three.js + fonts
 7. Re-measure baseline. If targets met for desktop and high-end mobile, ship.

@@ -485,6 +485,7 @@ main{position:relative;width:100%;margin-top:-45px}
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
 <script>
 // ── PRODUCTS ──────────────────────────────────────────────────────────────
 const PRODUCTS = [
@@ -719,8 +720,16 @@ function applyVariantTextures(sceneRoot, productIdx){
   });
 }
 
+// Shared loader config. Meshopt decoder required for GLBs compressed with `gltfpack -cc`.
+// Textures are WebP (via `gltfpack -tw`) and decode natively — no KTX2/Basis loader needed.
+function getConfiguredGLTFLoader(){
+  const loader = new THREE.GLTFLoader();
+  if(typeof MeshoptDecoder !== 'undefined') loader.setMeshoptDecoder(MeshoptDecoder);
+  return loader;
+}
+
 function loadIntoScene(sc, buf, type, onReady) {
-  new THREE.GLTFLoader().parse(buf,'',gltf=>{
+  getConfiguredGLTFLoader().parse(buf,'',gltf=>{
     const clone = gltf.scene.clone(true);
     fixMaterials(clone, type);
     sc.scene.add(clone);
@@ -881,10 +890,10 @@ function loadGLBFile(type, file) {
     fill.style.width = (loaded/2*100)+'%';
     if(loaded >= 2) setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'), 400);
   }
-  fetch('vinyl_animation.glb')
+  fetch('vinyl.v2.glb')
     .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
     .then(buf=>{loadGLBBuffer('vinyl',buf);oneDone()}).catch(oneDone);
-  fetch('DRB CD ONE (Setup) - ANIMATION.glb')
+  fetch('cd.v2.glb')
     .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
     .then(buf=>{loadGLBBuffer('cd',buf);oneDone()}).catch(oneDone);
 })();
