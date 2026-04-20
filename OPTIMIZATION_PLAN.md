@@ -342,9 +342,9 @@ Flip a query param, don't redeploy.
 5. **Phase 2** — lazy load + memory drop ✓ done
 6. **Phase 3a+3b** — self-host Three.js + fonts ✓ done (3c version upgrade deferred)
 7. Re-measure baseline. If targets met for desktop and high-end mobile, ship.
-8. **Phase 5** — cheap rendering (defer 4 — it's the hardest)
-9. **Section 18** — Mobile UX polish + interaction parity (depends on Phase 5 frame budget)
-10. **Phase 6** — scene sharing
+8. **Phase 5a-c** — cheap rendering ✓ done (5d light rig deferred — visible lighting change)
+9. **Phase 6** — scene sharing ✓ done (parse once, deep-clone materials per card)
+10. **Section 18** — Mobile UX polish + interaction parity (depends on Phase 5 frame budget + mobile device testing)
 11. **Phase 4** — shared WebGL context (only if mobile context exhaustion is still happening)
 12. **Phase 7** — Shopify integration (separate work stream, can start in parallel after Phase 3)
 

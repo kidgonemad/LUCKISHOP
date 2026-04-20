@@ -732,21 +732,35 @@ function getConfiguredGLTFLoader(){
   return loader;
 }
 
-function loadIntoScene(sc, buf, type, onReady) {
-  getConfiguredGLTFLoader().parse(buf,'',gltf=>{
-    const clone = gltf.scene.clone(true);
-    fixMaterials(clone, type);
-    sc.scene.add(clone);
-    const t = type==='cd' ? T_CD : T_VINYL;
-    if(gltf.animations&&gltf.animations.length){
-      buildMap(gltf.animations, clone, sc.nodes, sc.trackMap);
-      applyMap(sc.trackMap, sc.nodes, t.s, type==='vinyl'?VINYL_LABELS:null);
+// Shared-source clone: THREE.js clone(true) shares geometry by reference across clones (good — saves memory).
+// Materials are shared too by default, but we must deep-clone them because each card's applyVariantTextures
+// assigns a per-card mat.map; sharing materials would leak texture swaps across cards.
+function attachGLTFToScene(sc, gltf, type, onReady){
+  const clone = gltf.scene.clone(true);
+  clone.traverse(n => {
+    if(n.isMesh && n.material){
+      n.material = Array.isArray(n.material)
+        ? n.material.map(m => m.clone())
+        : n.material.clone();
     }
-    sc.tStart = t.s; sc.tEnd = t.e; sc.current = t.s;
-    sc.playing = false; sc.playDir = 1; sc.isOpen = false;
-    if(sc.productIdx !== undefined) applyVariantTextures(clone, sc.productIdx);
-    if(typeof onReady === 'function') onReady(sc);
-    sc.loaded = true; sc.dirty = true;
+  });
+  fixMaterials(clone, type);
+  sc.scene.add(clone);
+  const t = type==='cd' ? T_CD : T_VINYL;
+  if(gltf.animations && gltf.animations.length){
+    buildMap(gltf.animations, clone, sc.nodes, sc.trackMap);
+    applyMap(sc.trackMap, sc.nodes, t.s, type==='vinyl' ? VINYL_LABELS : null);
+  }
+  sc.tStart = t.s; sc.tEnd = t.e; sc.current = t.s;
+  sc.playing = false; sc.playDir = 1; sc.isOpen = false;
+  if(sc.productIdx !== undefined) applyVariantTextures(clone, sc.productIdx);
+  if(typeof onReady === 'function') onReady(sc);
+  sc.loaded = true; sc.dirty = true;
+}
+
+function loadIntoScene(sc, buf, type, onReady) {
+  getConfiguredGLTFLoader().parse(buf, '', gltf => {
+    attachGLTFToScene(sc, gltf, type, onReady);
   });
 }
 
@@ -871,11 +885,14 @@ const visObserver = new IntersectionObserver(entries=>{
 // ── LOAD GLBs ──────────────────────────────────────────────────────────────
 // retain=true keeps buffer globally (needed for drag-and-drop since there's no URL to re-fetch).
 // retain=false drops the buffer — modal will re-fetch from URL, served by browser cache.
+// Phase 6: parse GLB once, clone into every card of this type (shares geometry across 9 vinyl clones).
 function loadGLBBuffer(type, buffer, retain) {
-  cardScenes.forEach(sc => {
-    if(PRODUCTS[sc.productIdx].type === type) {
-      loadIntoScene(sc, buffer.slice(0), type);
-    }
+  getConfiguredGLTFLoader().parse(buffer, '', gltf => {
+    cardScenes.forEach(sc => {
+      if(PRODUCTS[sc.productIdx].type === type) {
+        attachGLTFToScene(sc, gltf, type);
+      }
+    });
   });
   if(retain){
     if(type==='vinyl') vinylGLB = buffer;
