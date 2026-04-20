@@ -750,6 +750,17 @@ function attachGLTFToScene(sc, gltf, type, onReady){
   });
   fixMaterials(clone, type);
   sc.scene.add(clone);
+  // Apply the type's saved scale immediately so first render matches final state.
+  // Without this, CD renders at scale 1 until tryApply() polls ~500ms later and drops it to 0.68,
+  // causing a visible "model too big then snaps smaller" pop-in.
+  if(typeof DEFAULTS !== 'undefined' && DEFAULTS[type] && DEFAULTS[type].sc !== 100){
+    const s = DEFAULTS[type].sc / 100;
+    sc.scene.traverse(n => {
+      if(n.parent === sc.scene && n !== sc.camera && (n.isGroup || n.isObject3D)){
+        n.scale.set(s, s, s);
+      }
+    });
+  }
   const t = type==='cd' ? T_CD : T_VINYL;
   if(gltf.animations && gltf.animations.length){
     buildMap(gltf.animations, clone, sc.nodes, sc.trackMap);
