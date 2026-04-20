@@ -2135,6 +2135,22 @@ if(_mode === 'product' && _prodHandle){
 }
 // Signal ready to the parent page so it can time its own init
 window.addEventListener('load', () => _postToParent({action:'ready', mode: _mode || 'standalone', product: _prodHandle || null}));
+
+// Report iframe content height so parent can size the iframe to fit (avoids nested scrollbars).
+// Product-mode: parent controls dimensions, no resize needed. Shop-mode: grid height varies.
+if(_inIframe && _mode === 'shop'){
+  function _reportHeight(){
+    const h = Math.ceil(Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight
+    ));
+    _postToParent({action:'resize', h});
+  }
+  window.addEventListener('load', _reportHeight);
+  window.addEventListener('resize', _reportHeight);
+  // Content mutations (cards appearing, titles wrapping differently) can change height.
+  try{ new ResizeObserver(_reportHeight).observe(document.body); }catch(e){}
+}
 </script>
 </body>
 </html>
