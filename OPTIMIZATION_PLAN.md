@@ -247,11 +247,20 @@ Two viable patterns:
 
 Cuts WebGL contexts from 10 → 1.
 
-### Phase 5 — Cheaper rendering (1 hr)
-- Replace RectAreaLight + 8 PointLights with: 1 DirectionalLight + 1 HemisphereLight (or bake env map)
-- Cards: `antialias:false`, `pixelRatio: min(dPR, mobile ? 1 : 1.5)`
-- Modal: `pixelRatio: min(dPR, 1.5)`
+### Phase 5 — Cheaper rendering
+
+**Phase 5a-c (done):**
+- Cards: `antialias:false`
+- Modal: `pixelRatio: min(dPR, 1.5 desktop / 1 mobile)`
 - Frame throttle when `navigator.hardwareConcurrency <= 4`
+
+**Phase 5d (attempted 2026-04-20, reverted) — light rig replacement:**
+- Tried: replace RectAreaLight + 8 PointLights + AmbientLight with 1 DirectionalLight (intensity 2.5, pos `-0.2,8,4`) + 1 HemisphereLight (intensity 1.2, 0xffffff top / 0x888888 bottom).
+- Result: user didn't like the look. No specific issue captured yet — revert was fast, didn't stop to iterate. Likely lost the disc's specular shimmer (the 8 PointLights were the source of those moving highlights).
+- **Revisit options if tried again:**
+  - Keep 2 of the 8 PointLights (the brightest ones — the intensity 60 at `(-0.20,6.50,-3.70)` and intensity 3.0 at `(-5.90,8.22,1.31)`) for disc shimmer, Directional + Hemi for base fill. "Light diet" instead of full replacement.
+  - Or: bake an environment map (HDRI via PMREMGenerator), use a single DirectionalLight for direction. Environment maps give free specular reflection.
+  - Or: leave as-is — current perf is already good after Phases 1/2/6, marginal return.
 
 ### Phase 6 — Scene sharing (2 hrs)
 Stop cloning full scene 9×. Share geometry/materials, clone only what differs (variant texture overrides). Three.js shares geometry on `clone()` but not materials — fix that.
