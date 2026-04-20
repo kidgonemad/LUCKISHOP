@@ -6,6 +6,14 @@ Untitled/
 node_modules/
 .tools/
 
+# Shopify theme files — live in the Shopify theme editor, not here
+sections/
+snippets/
+templates/
+layout/
+config/
+locales/
+
 DRB CD ONE (Setup) - ANIMATION.glb
 vinyl_animation.glb
 
