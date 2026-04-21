@@ -143,6 +143,14 @@ main{position:relative;width:100%;margin-top:-45px}
 #items a.soldout canvas.card-canvas{transition:filter .4s ease}
 #items a.soldout.shaking canvas.card-canvas{filter:grayscale(100%)}
 
+/* ── COMING SOON (locked) ── matches live theme's page-shop.liquid behavior */
+#items a.locked{cursor:not-allowed}
+#items a.locked:hover{transform:none}
+#items a.locked canvas.card-canvas{filter:blur(12px);transition:filter .4s ease}
+#items a.locked.shaking canvas.card-canvas{filter:blur(12px) grayscale(100%)}
+#items a.locked .item-title,
+#items a.locked .item-price{display:none}
+
 @keyframes shake{
   0%,100%{transform:translateX(0)}
   10%{transform:translateX(-8px)}
@@ -954,8 +962,14 @@ PRODUCTS.forEach((prod, idx) => {
   if(prod.soldout) card.classList.add('soldout');
 
   // In iframe + shop mode: intercept card click, ask parent to navigate. Otherwise native <a>.
+  // Sold-out or coming-soon products never navigate — they shake instead.
   const handleNav = e => {
-    if(prod.soldout){ e.preventDefault(); return; }
+    if(prod.soldout || prod.locked){
+      e.preventDefault(); e.stopPropagation();
+      card.classList.add('shaking');
+      setTimeout(() => card.classList.remove('shaking'), 700);
+      return;
+    }
     if(_inIframe){
       e.preventDefault();
       _postToParent({action:'navigate', url: prod.url});
@@ -974,6 +988,11 @@ PRODUCTS.forEach((prod, idx) => {
   title.textContent = prod.name;
   title.addEventListener('click', e => {
     e.preventDefault(); e.stopPropagation();
+    if(prod.soldout || prod.locked){
+      card.classList.add('shaking');
+      setTimeout(() => card.classList.remove('shaking'), 700);
+      return;
+    }
     if(_inIframe){ _postToParent({action:'navigate', url: prod.url}); }
     else { openModal(idx); }
   });
@@ -985,6 +1004,11 @@ PRODUCTS.forEach((prod, idx) => {
   price.textContent = prod.price;
   price.addEventListener('click', e => {
     e.preventDefault(); e.stopPropagation();
+    if(prod.soldout || prod.locked){
+      card.classList.add('shaking');
+      setTimeout(() => card.classList.remove('shaking'), 700);
+      return;
+    }
     if(_inIframe){ _postToParent({action:'navigate', url: prod.url}); }
     else { openModal(idx); }
   });
@@ -1004,7 +1028,7 @@ PRODUCTS.forEach((prod, idx) => {
   // Click on canvas → toggle 3D animation
   canvas.addEventListener('click',e=>{
     e.preventDefault();e.stopPropagation();
-    if(prod.soldout){
+    if(prod.soldout || prod.locked){
       card.classList.add('shaking');
       setTimeout(()=>card.classList.remove('shaking'), 700);
       return;
@@ -2180,6 +2204,36 @@ if(_mode === 'product' && _prodHandle){
 }
 // Signal ready to the parent page so it can time its own init
 window.addEventListener('load', () => _postToParent({action:'ready', mode: _mode || 'standalone', product: _prodHandle || null}));
+
+// Receive live Shopify product data (titles, prices, soldout, coming-soon state).
+// Parent sends this once it receives our 'ready' message. We update the existing
+// PRODUCTS entries + rendered cards by matching URL handle → card.
+window.addEventListener('message', function(ev){
+  if(!ev.data || typeof ev.data !== 'object') return;
+  if(ev.data.action !== 'products' || !Array.isArray(ev.data.products)) return;
+  const live = ev.data.products;
+  const cards = document.querySelectorAll('#items > a');
+  PRODUCTS.forEach((prod, idx) => {
+    const handle = _urlToHandle(prod.url);
+    const match = live.find(sp => sp.handle === handle);
+    if(!match) return;
+    // Update in-memory PRODUCTS (modal reads from this)
+    prod.name     = match.title;
+    prod.price    = match.price;
+    prod.soldout  = !!match.soldout;
+    prod.locked   = !!match.isComingSoon;
+    // Update rendered card
+    const card = cards[idx];
+    if(!card) return;
+    const titleEl = card.querySelector('.item-title');
+    const priceEl = card.querySelector('.item-price');
+    if(titleEl) titleEl.textContent = match.title;
+    if(priceEl) priceEl.textContent = match.price;
+    card.classList.toggle('soldout', prod.soldout);
+    card.classList.toggle('locked',  prod.locked);
+    if(prod.soldout || prod.locked) card.href = '#';
+  });
+});
 
 // Register Service Worker — cache-on-demand for GLBs, textures, three.js.
 // First visit loads normally; subsequent visits (same or different page embedding the iframe) hit cache.
