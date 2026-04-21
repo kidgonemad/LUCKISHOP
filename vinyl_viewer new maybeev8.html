@@ -138,9 +138,15 @@ main{position:relative;width:100%;margin-top:-45px}
 /* ── SOLD OUT ── */
 #items a.soldout{cursor:not-allowed}
 #items a.soldout:hover{transform:none}
-/* Always-visible orange strikethrough on sold-out title + price (works on mobile, no hover needed) */
+/* Orange strikethrough — use text-decoration so it renders on every wrapped line,
+   not just the middle of a single line (the previous background-gradient trick). */
 #items a.soldout .item-title,
-#items a.soldout .item-price{background-size:100% 3px !important}
+#items a.soldout .item-price{
+  text-decoration:line-through !important;
+  text-decoration-color:#ff6600 !important;
+  text-decoration-thickness:2px !important;
+  -webkit-text-decoration-color:#ff6600;
+  background-image:none !important}
 #items a.soldout canvas.card-canvas{transition:filter .4s ease;filter:grayscale(60%)}
 #items a.soldout.shaking canvas.card-canvas{filter:grayscale(100%)}
 
@@ -2247,13 +2253,15 @@ window.addEventListener('message', function(ev){
     card.classList.toggle('long-title', (match.title || '').length > 28);
     if(prod.soldout || prod.locked) card.href = '#';
   });
-  // Titles may have grown taller — re-report height so parent resizes the iframe
-  // (closes the empty gap between iframe bottom and parent grid).
+  // Titles + layout may reflow for several frames after DOM updates. Fire multiple
+  // resize reports so parent's iframe height tracks the final content height, not
+  // an intermediate value. Prevents stale empty-space at iframe bottom.
   if(_inIframe){
-    setTimeout(() => {
+    const reportOnce = () => {
       const h = Math.ceil(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
       _postToParent({action:'resize', h});
-    }, 150);
+    };
+    [80, 300, 800, 1600].forEach(ms => setTimeout(reportOnce, ms));
   }
 });
 
