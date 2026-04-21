@@ -2258,7 +2258,15 @@ window.addEventListener('message', function(ev){
   // an intermediate value. Prevents stale empty-space at iframe bottom.
   if(_inIframe){
     const reportOnce = () => {
-      const h = Math.ceil(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
+      const items = document.getElementById('items');
+      const last = items && items.lastElementChild;
+      let h;
+      if(last){
+        const r = last.getBoundingClientRect();
+        h = Math.ceil(r.bottom + window.scrollY + 4);
+      } else {
+        h = Math.ceil(document.body.scrollHeight);
+      }
       _postToParent({action:'resize', h});
     };
     [80, 300, 800, 1600].forEach(ms => setTimeout(reportOnce, ms));
@@ -2274,18 +2282,24 @@ if('serviceWorker' in navigator){
 }
 
 // Report iframe content height so parent can size the iframe to fit (avoids nested scrollbars).
+// Measure from the LAST card's bottom edge, not document.body.scrollHeight — because body
+// inherits min-height:100vh which makes scrollHeight clamp to iframe's own height (chicken-and-egg).
 // Product-mode: parent controls dimensions, no resize needed. Shop-mode: grid height varies.
 if(_inIframe && _mode === 'shop'){
   function _reportHeight(){
-    const h = Math.ceil(Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight
-    ));
+    const items = document.getElementById('items');
+    const last = items && items.lastElementChild;
+    let h;
+    if(last){
+      const r = last.getBoundingClientRect();
+      h = Math.ceil(r.bottom + window.scrollY + 4); // 4px buffer
+    } else {
+      h = Math.ceil(document.body.scrollHeight);
+    }
     _postToParent({action:'resize', h});
   }
   window.addEventListener('load', _reportHeight);
   window.addEventListener('resize', _reportHeight);
-  // Content mutations (cards appearing, titles wrapping differently) can change height.
   try{ new ResizeObserver(_reportHeight).observe(document.body); }catch(e){}
 }
 </script>
