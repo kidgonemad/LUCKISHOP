@@ -138,9 +138,10 @@ main{position:relative;width:100%;margin-top:-45px}
 /* ── SOLD OUT ── */
 #items a.soldout{cursor:not-allowed}
 #items a.soldout:hover{transform:none}
-#items a.soldout:hover .item-title,
-#items a.soldout:hover .item-price{background-size:100% 3px}
-#items a.soldout canvas.card-canvas{transition:filter .4s ease}
+/* Always-visible orange strikethrough on sold-out title + price (works on mobile, no hover needed) */
+#items a.soldout .item-title,
+#items a.soldout .item-price{background-size:100% 3px !important}
+#items a.soldout canvas.card-canvas{transition:filter .4s ease;filter:grayscale(60%)}
 #items a.soldout.shaking canvas.card-canvas{filter:grayscale(100%)}
 
 /* ── COMING SOON (locked) ── matches live theme's page-shop.liquid behavior */
