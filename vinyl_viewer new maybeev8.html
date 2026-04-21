@@ -104,7 +104,9 @@ main{position:relative;width:100%;margin-top:-45px}
   display:block;width:calc(100% / 2 - 10px);box-sizing:border-box;
   position:relative;transition:transform .3s ease;font-size:initial;
   align-self:flex-start;text-decoration:none;color:#000;overflow:hidden}
-#items a:hover{transform:scale(1.02)}
+/* Hover area tightened: only the canvas (visible 3D area) reacts, not the whole card */
+#items a canvas.card-canvas:hover{transform:scale(1.02);transition:transform .3s ease}
+#items a:hover{transform:none}
 
 #items a canvas.card-canvas{
   position:relative;width:100%;height:auto;display:block;margin:0 auto;
@@ -1635,15 +1637,18 @@ animate();
 const TILT_MAX=5.0; // tilt intensity — camera offset in world units
 cardScenes.forEach((sc,i)=>{
   const card=grid.children[i];
-  card.addEventListener('mousemove',e=>{
+  // Tilt + hover scope tightened to the canvas only — empty whitespace in the card no longer reacts
+  const canvas=card.querySelector('canvas.card-canvas');
+  if(!canvas) return;
+  canvas.addEventListener('mousemove',e=>{
     if(!sc.loaded)return;
-    const rect=card.getBoundingClientRect();
+    const rect=canvas.getBoundingClientRect();
     const nx=(e.clientX-rect.left)/rect.width*2-1; // -1 to 1
     const ny=(e.clientY-rect.top)/rect.height*2-1;
     sc.tiltTargetX=-ny*TILT_MAX; // tilt up/down
     sc.tiltTargetY=nx*TILT_MAX;  // tilt left/right
   });
-  card.addEventListener('mouseleave',()=>{
+  canvas.addEventListener('mouseleave',()=>{
     sc.tiltTargetX=0; sc.tiltTargetY=0;
   });
 });
