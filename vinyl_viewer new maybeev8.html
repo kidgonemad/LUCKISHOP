@@ -2278,6 +2278,44 @@ window.addEventListener('message', function(ev){
   }
 });
 
+// Standalone mode (not in iframe, no ?mode= param): fetch each product's JSON from Shopify
+// directly so titles / prices / soldout state always match the live luckivault.com.
+// Same contract as the postMessage products action — just posts to this window itself,
+// which re-uses the existing message handler above.
+if(!_mode && !_inIframe){
+  window.addEventListener('load', () => {
+    const SHOPIFY_BASE = 'https://www.luckivault.com';
+    const fetches = PRODUCTS.map(prod => {
+      const handle = _urlToHandle(prod.url);
+      if(!handle) return Promise.resolve(null);
+      return fetch(SHOPIFY_BASE + '/products/' + handle + '.json')
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+    });
+    Promise.all(fetches).then(results => {
+      const live = [];
+      results.forEach(payload => {
+        if(!payload || !payload.product) return;
+        const p = payload.product;
+        const firstVar = p.variants && p.variants[0];
+        if(!firstVar) return;
+        const allSoldOut = (p.variants || []).every(v => !v.available);
+        const tl = (p.title || '').toLowerCase();
+        const isTeeOrPack = /\b(tee|pack|bundle)\b/.test(tl);
+        const isComingSoon = tl.indexOf('coming soon') >= 0 || tl.indexOf('comingsoon') >= 0;
+        live.push({
+          handle: p.handle,
+          title: p.title,
+          price: '$' + parseFloat(firstVar.price).toFixed(2),
+          soldout: allSoldOut && !isTeeOrPack,
+          isComingSoon: isComingSoon
+        });
+      });
+      if(live.length) window.postMessage({action:'products', products: live}, '*');
+    });
+  });
+}
+
 // Register Service Worker — cache-on-demand for GLBs, textures, three.js.
 // First visit loads normally; subsequent visits (same or different page embedding the iframe) hit cache.
 if('serviceWorker' in navigator){
