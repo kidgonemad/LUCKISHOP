@@ -1137,21 +1137,26 @@ function loadGLBFile(type, file) {
 })();
 
 // Lazy CD GLB load — fetch when the CD card is within 300px of viewport.
+// In product-mode there are no grid cards, so the IntersectionObserver below
+// would never fire and the auto-opened CD modal would stay empty. In that case
+// load the CD up front (retain=true so the modal reads the cached buffer) —
+// mirrors how the vinyl is eagerly loaded by autoLoadVinyl().
 (function lazyLoadCD(){
   const cdIdx = PRODUCTS.findIndex(p => p.type === 'cd');
   if(cdIdx < 0) return;
+  const loadCD = retain => fetch('cd.v2.glb')
+    .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+    .then(buf=>loadGLBBuffer('cd', buf, retain))
+    .catch(e=>console.warn('CD GLB load failed:', e));
   const cdCard = grid.children[cdIdx];
-  if(!cdCard) return;
+  if(!cdCard){ loadCD(true); return; }   // product-mode: no card — load now, keep buffer for the modal
   let started = false;
   const obs = new IntersectionObserver(entries=>{
     if(started) return;
     if(entries.some(e=>e.isIntersecting)){
       started = true;
       obs.disconnect();
-      fetch('cd.v2.glb')
-        .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
-        .then(buf=>loadGLBBuffer('cd', buf))
-        .catch(e=>console.warn('CD GLB load failed:', e));
+      loadCD(false);
     }
   }, {rootMargin:'300px'});
   obs.observe(cdCard);
@@ -1420,6 +1425,7 @@ function openModal(idx){
     modalRenderer.physicallyCorrectLights=true;
   }
   modalSC=makeCardScene(modalCanvas,prod.type);
+  modalSC.type=prod.type;
   modalSC.renderer=modalRenderer;
   modalSC.productIdx=idx;
   modalSC.playing=false;
