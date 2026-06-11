@@ -1454,16 +1454,16 @@ function openModal(idx){
       .catch(e=>console.warn('Modal GLB load failed:', e));
   }
 
-  // OPEN VINYL button: hide for CD (no sleeve). Also hide on mobile in standalone/shop modes
-  // (mobile canvas stays square per CSS). In product-mode the button must show on mobile too —
-  // it's the only interaction in that iframe, and parent page handles layout.
+  // OPEN button: plays the model's open animation (vinyl sleeve / CD case).
+  // Hidden on mobile in standalone/shop modes (mobile canvas stays square per CSS).
+  // In product-mode it must show on mobile too — it's the only interaction in that iframe.
   const vinylBtn=document.querySelector('.modal-vinyl-btn');
   if(vinylBtn){
     const isCD = prod.type==='cd';
     const isMobileLayoutCase = _mode !== 'product' && window.innerWidth<=768;
-    const hideBtn = isCD || isMobileLayoutCase;
+    const hideBtn = isMobileLayoutCase;
     vinylBtn.style.display=hideBtn?'none':'';
-    vinylBtn.textContent='OPEN VINYL';
+    vinylBtn.textContent = isCD ? 'OPEN CD' : 'OPEN VINYL';
   }
 
   // Start in Layout 1 (closed state) — apply immediately without transition
@@ -1624,8 +1624,8 @@ function animate(){
     const t=modalSC.type==='cd'?T_CD:T_VINYL;
     if(modalSC.playing){
       modalSC.current+=delta*modalSC.playDir;
-      if(modalSC.playDir===1&&modalSC.current>=t.e){modalSC.current=t.e;modalSC.playing=false;modalSC.isOpen=true;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent='CLOSE VINYL';}
-      if(modalSC.playDir===-1&&modalSC.current<=t.s){modalSC.current=t.s;modalSC.playing=false;modalSC.isOpen=false;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent='OPEN VINYL';}
+      if(modalSC.playDir===1&&modalSC.current>=t.e){modalSC.current=t.e;modalSC.playing=false;modalSC.isOpen=true;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent=modalSC.type==='cd'?'CLOSE CD':'CLOSE VINYL';}
+      if(modalSC.playDir===-1&&modalSC.current<=t.s){modalSC.current=t.s;modalSC.playing=false;modalSC.isOpen=false;const b=document.querySelector('.modal-vinyl-btn');if(b)b.textContent=modalSC.type==='cd'?'OPEN CD':'OPEN VINYL';}
       applyMap(modalSC.trackMap,modalSC.nodes,modalSC.current,modalSC.type==='vinyl'?VINYL_LABELS:null);
     }
     if(modalSC._controls)modalSC._controls.update();
