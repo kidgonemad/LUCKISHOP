@@ -1163,17 +1163,25 @@ function loadGLBFile(type, file) {
 })();
 
 // ── DRAG & DROP ───────────────────────────────────────────────────────────
-const dropBanner = document.getElementById('dropBanner');
-let dragCount=0;
-document.addEventListener('dragenter',()=>{dragCount++;dropBanner.classList.add('visible');});
-document.addEventListener('dragleave',()=>{dragCount--;if(dragCount<=0){dragCount=0;dropBanner.classList.remove('visible');}});
-document.addEventListener('dragover',e=>e.preventDefault());
-document.addEventListener('drop',e=>{
-  e.preventDefault();dragCount=0;dropBanner.classList.remove('visible');
-  const f=e.dataTransfer.files[0];
-  if(!f||!f.name.match(/\.glb$/i))return;
-  loadGLBFile(f.name.toLowerCase().includes('cd')?'cd':'vinyl', f);
-});
+// DEV-ONLY: lets you drop a .glb to swap the model. Locked behind ?dev=1 so
+// regular visitors on the live shop/product pages can't drag files onto the viewer.
+if(_params.get('dev') === '1'){
+  const dropBanner = document.getElementById('dropBanner');
+  let dragCount=0;
+  document.addEventListener('dragenter',()=>{dragCount++;dropBanner.classList.add('visible');});
+  document.addEventListener('dragleave',()=>{dragCount--;if(dragCount<=0){dragCount=0;dropBanner.classList.remove('visible');}});
+  document.addEventListener('dragover',e=>e.preventDefault());
+  document.addEventListener('drop',e=>{
+    e.preventDefault();dragCount=0;dropBanner.classList.remove('visible');
+    const f=e.dataTransfer.files[0];
+    if(!f||!f.name.match(/\.glb$/i))return;
+    loadGLBFile(f.name.toLowerCase().includes('cd')?'cd':'vinyl', f);
+  });
+} else {
+  // Locked: still block the browser from navigating away if a file is accidentally dropped.
+  document.addEventListener('dragover',e=>e.preventDefault());
+  document.addEventListener('drop',e=>e.preventDefault());
+}
 
 // ── RESKIN PANEL ──────────────────────────────────────────────────────────
 let reskinOpen=false, activeCardIdx=null, reskinTargets=[], reskinPresets={}, activePreset=null, selReskinIdx=null;
