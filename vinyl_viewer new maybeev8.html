@@ -156,8 +156,8 @@ main{position:relative;width:100%;margin-top:-45px}
 
 /* ── PARENT SKIN: ORANGE ── set by luckivault.com via ?skin= or postMessage.
    Orange accents read muddy on the orange page — flip them to white. */
-/* OPEN VINYL / OPEN CD pill goes orange (black text keeps contrast) */
-body.skin-orange.product-mode .modal-vinyl-btn{background:#e54d29 !important}
+/* OPEN VINYL / OPEN CD pill goes orange (black border + text keep contrast) */
+body.skin-orange.product-mode .modal-vinyl-btn{background:#e54d29 !important;color:#000 !important;border-color:#000 !important}
 /* add-to-cart in the shop modal: black button, orange text */
 body.skin-orange .modal-add-btn{color:#e54d29}
 body.skin-orange #items a.soldout .item-title,
@@ -253,7 +253,10 @@ body.product-mode .modal-left{width:100%!important;padding:0!important;margin:0!
 body.product-mode .modal-canvas-wrap{height:100%;background:transparent}
 body.product-mode #modalCanvas{max-height:none!important;height:100%!important;aspect-ratio:auto!important}
 body.product-mode html,body.product-mode body{height:100%;overflow:hidden}
-body.product-mode .modal-vinyl-btn{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:auto;padding:10px 20px;background:rgba(255,255,255,.9);z-index:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+body.product-mode .modal-vinyl-btn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  width:auto;padding:12px 28px;background:rgba(255,255,255,.95);z-index:600;
+  border:2px solid #000;border-radius:6px;font-size:14px;letter-spacing:.2em;color:#000;
+  box-shadow:0 2px 8px rgba(0,0,0,.15)}
 
 #reskinPanel{position:fixed;right:0;top:20px;bottom:0;z-index:300;
   background:rgba(0,0,0,0.92);border-left:1px solid #333;width:220px;
@@ -380,6 +383,16 @@ body.product-mode .modal-vinyl-btn{position:fixed;bottom:12px;left:50%;transform
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   transition:opacity .5s}
 #loadingScreen.hidden{opacity:0;pointer-events:none}
+/* Per-card loading: a spinning * (brand asterisk) sits on each card until its
+   model attaches. Orange reads on both the white and orange parent skins. */
+.card-spinner{position:absolute;left:50%;top:38%;
+  font-family:Georgia,serif;font-weight:900;font-size:44px;line-height:1;color:#e54d29;
+  text-shadow:0 1px 6px rgba(255,255,255,.4);pointer-events:none;z-index:4;
+  animation:card-spin 1.1s linear infinite;transition:opacity .4s ease}
+.card-spinner.done{opacity:0}
+@keyframes card-spin{
+  from{transform:translate(-50%,-50%) rotate(0turn)}
+  to{transform:translate(-50%,-50%) rotate(1turn)}}
 .loading-logo{font-size:12px;letter-spacing:.4em;color:#999;
   font-family:"Dot Matrix V2",monospace;animation:loadPulse 2s ease infinite}
 .loading-bar{width:120px;height:2px;background:#eee;border-radius:1px;overflow:hidden}
@@ -965,6 +978,10 @@ function attachGLTFToScene(sc, gltf, type, onReady){
   if(sc.productIdx !== undefined) applyVariantTextures(clone, sc.productIdx);
   if(typeof onReady === 'function') onReady(sc);
   sc.loaded = true; sc.dirty = true;
+  // Model is attached — fade out this card's loading spinner (if it has one).
+  const _canvasEl = sc.renderer && sc.renderer.domElement;
+  const _spin = _canvasEl && _canvasEl.parentElement && _canvasEl.parentElement.querySelector('.card-spinner');
+  if(_spin){ _spin.classList.add('done'); setTimeout(()=>_spin.remove(), 450); }
 }
 
 function loadIntoScene(sc, buf, type, onReady) {
@@ -1031,6 +1048,12 @@ PRODUCTS.forEach((prod, idx) => {
   const canvas = document.createElement('canvas');
   canvas.className = 'card-canvas';
   card.appendChild(canvas);
+
+  // Spinning * while this card's model loads — removed in attachGLTFToScene.
+  const spinner = document.createElement('div');
+  spinner.className = 'card-spinner';
+  spinner.textContent = '*';
+  card.appendChild(spinner);
 
   // Title overlay — click routes same as card click
   const title = document.createElement('span');
@@ -1162,7 +1185,14 @@ function loadGLBFile(type, file) {
   };
   fetch('vinyl.v2.glb')
     .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
-    .then(buf=>{loadGLBBuffer('vinyl',buf);finish();})
+    .then(buf=>{
+      loadGLBBuffer('vinyl',buf);finish();
+      // Vinyl is in — start the CD download in the background now instead of
+      // waiting for the CD card to scroll near. lazyLoadCD's started-guard
+      // makes this race-safe with its IntersectionObserver.
+      const kickCD = ()=>{ if(window.__startCDLoad) window.__startCDLoad(); };
+      ('requestIdleCallback' in window) ? requestIdleCallback(kickCD,{timeout:3000}) : setTimeout(kickCD,800);
+    })
     .catch(finish);
 })();
 
@@ -1174,17 +1204,21 @@ function loadGLBFile(type, file) {
 (function lazyLoadCD(){
   const cdIdx = PRODUCTS.findIndex(p => p.type === 'cd');
   if(cdIdx < 0) return;
-  const loadCD = retain => fetch('cd.v2.glb')
-    .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
-    .then(buf=>loadGLBBuffer('cd', buf, retain))
-    .catch(e=>console.warn('CD GLB load failed:', e));
+  let started = false;
+  const loadCD = retain => {
+    if(started) return;
+    started = true;
+    fetch('cd.v2.glb')
+      .then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+      .then(buf=>loadGLBBuffer('cd', buf, retain))
+      .catch(e=>console.warn('CD GLB load failed:', e));
+  };
   const cdCard = grid.children[cdIdx];
   if(!cdCard){ loadCD(true); return; }   // product-mode: no card — load now, keep buffer for the modal
-  let started = false;
+  // Early trigger: autoLoadVinyl calls this once the vinyl GLB has landed.
+  window.__startCDLoad = () => loadCD(false);
   const obs = new IntersectionObserver(entries=>{
-    if(started) return;
     if(entries.some(e=>e.isIntersecting)){
-      started = true;
       obs.disconnect();
       loadCD(false);
     }

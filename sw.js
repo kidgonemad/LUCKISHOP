@@ -4,7 +4,7 @@
 // Return visits serve cached assets without touching the network.
 
 // Bump CACHE_NAME whenever you ship updated GLBs or three.js — forces clients to re-fetch.
-const CACHE_NAME = 'luckivault-3d-v1';
+const CACHE_NAME = 'luckivault-3d-v2';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
