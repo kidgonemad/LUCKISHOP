@@ -749,7 +749,9 @@ function makeCardScene(canvas, type) {
   renderer.physicallyCorrectLights = true;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xffffff);
+  // null = transparent canvas (renderer has alpha:true), so the parent page's
+  // skin color shows behind the 3D models instead of a hardcoded white box.
+  scene.background = null;
 
   const cfg = type === 'cd'
     ? {pos:[-0.181,6.922,4.511], tgt:[-0.15,6.83,-0.15], fov:39.6}
