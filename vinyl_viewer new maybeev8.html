@@ -22,7 +22,9 @@
 
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-  background:#fff;color:#000;font-family:"Dot Matrix V2",monospace;
+  /* transparent so the parent page's skin color (white or orange) shows through
+     the iframe; standalone on GitHub still renders on the default white canvas */
+  background:transparent;color:#000;font-family:"Dot Matrix V2",monospace;
   min-height:100vh;overflow-x:hidden;
   cursor:url('assets/mouse.png'),auto !important;
 }
@@ -151,6 +153,17 @@ main{position:relative;width:100%;margin-top:-45px}
   background-image:none !important}
 #items a.soldout canvas.card-canvas{transition:filter .4s ease;filter:grayscale(60%)}
 #items a.soldout.shaking canvas.card-canvas{filter:grayscale(100%)}
+
+/* ── PARENT SKIN: ORANGE ── set by luckivault.com via ?skin= or postMessage.
+   Orange accents read muddy on the orange page — flip them to white. */
+body.skin-orange #loadingScreen{background:#e54d29}
+body.skin-orange #items a.soldout .item-title,
+body.skin-orange #items a.soldout .item-price{
+  text-decoration-color:#fff !important;
+  -webkit-text-decoration-color:#fff !important}
+body.skin-orange #items a .item-title,
+body.skin-orange #items a .item-price{
+  background-image:linear-gradient(#fff,#fff)}
 
 /* ── COMING SOON (locked) ── matches live theme's page-shop.liquid behavior */
 #items a.locked{cursor:not-allowed}
@@ -623,6 +636,16 @@ function _urlToHandle(u){ const m = u && u.match(/\/products\/([^/?#]+)/); retur
 if(_params.get('dev')==='1') document.body.classList.add('dev-mode');
 if(_mode==='shop') document.body.classList.add('shop-mode');
 if(_mode==='product' && _prodHandle) document.body.classList.add('product-mode');
+
+// ── PARENT SKIN ── set from the URL at startup (so even the loading screen
+// matches), then kept in sync live via {action:'skin'} postMessage when the
+// visitor taps the * toggle on luckivault.com.
+if(_params.get('skin')==='orange') document.body.classList.add('skin-orange');
+window.addEventListener('message', function(ev){
+  if(ev.data && ev.data.action === 'skin'){
+    document.body.classList.toggle('skin-orange', ev.data.skin === 'orange');
+  }
+});
 
 // ── PRODUCTS ──────────────────────────────────────────────────────────────
 const PRODUCTS = [
