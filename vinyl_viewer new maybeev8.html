@@ -156,7 +156,10 @@ main{position:relative;width:100%;margin-top:-45px}
 
 /* ── PARENT SKIN: ORANGE ── set by luckivault.com via ?skin= or postMessage.
    Orange accents read muddy on the orange page — flip them to white. */
-body.skin-orange #loadingScreen{background:#e54d29}
+/* OPEN VINYL / OPEN CD pill goes orange (black text keeps contrast) */
+body.skin-orange.product-mode .modal-vinyl-btn{background:#e54d29 !important}
+/* add-to-cart in the shop modal: black button, orange text */
+body.skin-orange .modal-add-btn{color:#e54d29}
 body.skin-orange #items a.soldout .item-title,
 body.skin-orange #items a.soldout .item-price{
   text-decoration-color:#fff !important;
@@ -371,7 +374,9 @@ body.product-mode .modal-vinyl-btn{position:fixed;bottom:12px;left:50%;transform
 .drop-hint{font-size:10px;letter-spacing:.1em;color:#aaa;font-family:"Dot Matrix V2",monospace}
 
 /* ── LOADING ── */
-#loadingScreen{position:fixed;inset:0;z-index:9999;background:#fff;
+/* transparent: the parent page's skin color shows through from the first frame,
+   so toggling * mid-load never flashes white (standalone still reads white). */
+#loadingScreen{position:fixed;inset:0;z-index:9999;background:transparent;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   transition:opacity .5s}
 #loadingScreen.hidden{opacity:0;pointer-events:none}
