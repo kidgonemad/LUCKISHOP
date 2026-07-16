@@ -156,8 +156,8 @@ main{position:relative;width:100%;margin-top:-45px}
 
 /* ── PARENT SKIN: ORANGE ── set by luckivault.com via ?skin= or postMessage.
    Orange accents read muddy on the orange page — flip them to white. */
-/* OPEN VINYL / OPEN CD pill goes orange (black border + text keep contrast) */
-body.skin-orange.product-mode .modal-vinyl-btn{background:#e54d29 !important;color:#000 !important;border-color:#000 !important}
+/* OPEN VINYL / OPEN CD caption: plain black text on the orange page too */
+body.skin-orange.product-mode .modal-vinyl-btn{background:none !important;color:#000 !important;border:0 !important}
 /* add-to-cart in the shop modal: black button, orange text */
 body.skin-orange .modal-add-btn{color:#e54d29}
 body.skin-orange #items a.soldout .item-title,
@@ -253,10 +253,13 @@ body.product-mode .modal-left{width:100%!important;padding:0!important;margin:0!
 body.product-mode .modal-canvas-wrap{height:100%;background:transparent}
 body.product-mode #modalCanvas{max-height:none!important;height:100%!important;aspect-ratio:auto!important}
 body.product-mode html,body.product-mode body{height:100%;overflow:hidden}
+/* Product mode: no chunky button — the 3D itself is tap-to-open/close. This is
+   just a minimal caption (still clickable) that reads OPEN/CLOSE VINYL|CD, in
+   plain black text so no skin toggle can leave stale white edges behind. */
 body.product-mode .modal-vinyl-btn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
-  width:auto;padding:12px 28px;background:rgba(255,255,255,.95);z-index:600;
-  border:2px solid #000;border-radius:6px;font-size:14px;letter-spacing:.2em;color:#000;
-  box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  width:auto;padding:6px 10px;background:none;border:0;box-shadow:none;z-index:600;
+  font-size:11px;letter-spacing:.3em;color:#000;opacity:.85}
+body.product-mode .modal-vinyl-btn:hover{color:#000;opacity:1}
 
 #reskinPanel{position:fixed;right:0;top:20px;bottom:0;z-index:300;
   background:rgba(0,0,0,0.92);border-left:1px solid #333;width:220px;
@@ -1512,6 +1515,17 @@ function openModal(idx){
   controls.target.set(...modalSC.cfg.tgt);controls.update();
   modalSC._controls=controls;
   modalSC.dirty=true;
+
+  // Product mode: tap the 3D itself to open/close (like the shop cards).
+  // A "tap" = quick press without dragging, so orbit-rotating never triggers it.
+  if(_mode==='product' && !modalCanvas._tapWired){
+    modalCanvas._tapWired=true;
+    let _tx=0,_ty=0,_tt=0;
+    modalCanvas.addEventListener('pointerdown',e=>{_tx=e.clientX;_ty=e.clientY;_tt=Date.now();});
+    modalCanvas.addEventListener('pointerup',e=>{
+      if(Date.now()-_tt<500 && Math.hypot(e.clientX-_tx,e.clientY-_ty)<8) toggleModalVinyl();
+    });
+  }
 
   const buf=prod.type==='cd'?cdGLB:vinylGLB;
   if(buf){
